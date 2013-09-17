@@ -1,12 +1,5 @@
 #!/usr/bin/make -f
 # -*- makefile -*-
 
-DESTDIR=$(CURDIR)/debian/tmp
-
 %:
 	dh $@ --with python2
-
-override_dh_auto_install:
-	dh_auto_install --destdir=$(DESTDIR)
-
-.PHONY: override_dh_auto_install

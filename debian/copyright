@@ -1,12 +1,5 @@
-This package was debianized by Aurelien ROUGEMONT <beorn@gandi.net> on
-Thu, 10 January 2013.
-
 Upstream Author: Gandi SAS
 
+Files: *
 Copyright: 2013 Gandi SAS
-
-License: ask legal team
-
-The Debian packaging is (C) 2006-2013, Gandi SAS and is licensed 
-under the GPL, see `/usr/share/common-licenses/GPL'.
-
+License: proprietary
