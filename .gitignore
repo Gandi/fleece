@@ -4,3 +4,6 @@ ENV
 *.yaml
 dist/
 build
+debian/tmp
+debian/fleece.substvars
+debian/fleece.debhelper.log
