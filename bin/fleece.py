@@ -16,7 +16,7 @@ def usage():
     print  progname + " parameters are :"
     print "     -h --help"
     print "         prints this usage message and exit"
-    print "     -H --host <hostname.domain.tld>"
+    print "     -H --hostname <hostname.domain.tld>"
     print "         destination ip address for udp stream"
     print "     -P --port <12345>"
     print "         destination port for udp stream"
@@ -43,7 +43,7 @@ def main():
         opts, args = getopt.getopt( \
             sys.argv[1:], \
             "hH:P:F:", \
-            ["help", "host", "port", "fields"] \
+            ["help", "hostname=", "port=", "fields="] \
             )
     except getopt.GetoptError, err:
         # print help information and exit:
@@ -75,11 +75,14 @@ def main():
     fields = fields.split(',')
 
     for o in iterload(sys.stdin):
-        for entry in fields:
-            key, value = entry.decode('utf-8', errors='replace').split('=')
-            o[key] = value
-            pprint.pprint(o)
-            client_socket.sendto(json.dumps(o), address)
+        try:
+            for entry in fields:
+	        key, value = entry.decode('utf-8', 'replace').split('=')
+		o[key] = value
+        except ValueError:
+            #no value to add to the dict
+            pass
+        client_socket.sendto(json.dumps(o), address)
 
 if __name__ == "__main__":
     main()
