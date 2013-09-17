@@ -1,0 +1,10 @@
+Package: fleece
+Version: 0.0.1
+Architecture: all
+Maintainer: Aurelien ROUGEMONT <beorn@gandi.net>
+Installed-Size: 31
+Depends: python (>= 2.6)
+Section: python
+Priority: optional
+Description: Simple udp jsonifier from stdin.
+ Simple udp jsonifier from stdin. Meant for piping apache logs.

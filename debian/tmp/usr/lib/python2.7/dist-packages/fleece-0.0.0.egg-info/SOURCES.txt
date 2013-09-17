@@ -1,0 +1,6 @@
+setup.py
+fleece.egg-info/PKG-INFO
+fleece.egg-info/SOURCES.txt
+fleece.egg-info/dependency_links.txt
+fleece.egg-info/not-zip-safe
+fleece.egg-info/top_level.txt
