@@ -4,7 +4,8 @@ __copyright__ = "internal"
 __revision__ = "$Id$"
 __version__ = "0.2"
 
-from socket import *
+#from socket import *
+import socket
 import getopt
 import sys
 import os
@@ -13,7 +14,7 @@ import select
 import pprint
 
 def usage():
-    print  progname + " parameters are :"
+    print os.path.basename(sys.argv[0]) + " parameters are :"
     print "     -h --help"
     print "         prints this usage message and exit"
     print "     -H --hostname <hostname.domain.tld>"
@@ -23,22 +24,19 @@ def usage():
     print "     -F --fields key1value,key2,value,..."
 
 def iterload(stream):
-    buffer = ""
+    bufferjson = ""
     dec = json.JSONDecoder()
     for line in stream:
-        buffer = buffer.strip() + line.strip()
+        bufferjson = bufferjson.strip() + line.strip()
         while(True):
             try:
-                r = dec.raw_decode(buffer)
+                r = dec.raw_decode(bufferjson)
             except Exception:
                 break
             yield r[0]
-            buffer = buffer[r[1]:].strip()
+            bufferjson = bufferjson[r[1]:].strip()
 
 def main():
-    global progname
-    progname = os.path.basename(sys.argv[0])
-
     try:
         opts, args = getopt.getopt( \
             sys.argv[1:], \
@@ -71,14 +69,14 @@ def main():
             raise RuntimeError("unhandled option")
 
     address = (hostname, port)
-    client_socket = socket(AF_INET, SOCK_DGRAM)
+    client_socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
     fields = fields.split(',')
 
     for o in iterload(sys.stdin):
         try:
             for entry in fields:
-	        key, value = entry.decode('utf-8', 'replace').split('=')
-		o[key] = value
+                key, value = entry.decode('utf-8', 'replace').split('=')
+                o[key] = value
         except ValueError:
             #no value to add to the dict
             pass
