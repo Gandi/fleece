@@ -4,8 +4,8 @@ import os
 from setuptools import setup, find_packages
 
 with open(os.path.join('bin', 'fleece.py')) as v_file:
-    version = re.compile(r".*__version__ = '(.*?)'",
-                         re.S).match(v_file.read())
+    version = re.compile(r".*__version__ = [\"'](.*?)[\"']",
+                         re.S).match(v_file.read()).group(1)
 
 requires = []
 
