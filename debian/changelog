@@ -1,4 +1,4 @@
-fleece (0.2) UNRELEASED; urgency=low
+fleece (0.2-1) unstable; urgency=low
 
   * Fix int conversion.
   * Handle empty fields option
@@ -8,7 +8,7 @@ fleece (0.2) UNRELEASED; urgency=low
 
  -- beorn <beorn@gandi.net>  Wed, 18 Sep 2013 01:03:12 +0200
 
-fleece (0.1) unstable; urgency=low
+fleece (0.1-1) unstable; urgency=low
 
   * Initial release. (version v.0.1)
 
