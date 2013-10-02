@@ -236,7 +236,10 @@ int main(int argc, char**argv)
 
 	   sendto(sockfd, sendline, strlen(sendline), 0, \
 	   	(struct sockaddr *)&servaddr, sizeof(servaddr));
+
+	   /* clean memory */
 	   free(jsonevent);
+	   free(jsoneventstring);
       }
     } /* loop forever, reading from a file */
 }
