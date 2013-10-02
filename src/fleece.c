@@ -204,20 +204,21 @@ int main(int argc, char**argv)
     {
        if(strlen(sendline) == 0)
        {
-           // no data let's not burn cpu for nothing
+           /* no data let's not burn cpu for nothing */
            sleep(1);
        } else {
            json_t *jsonevent;
            json_error_t jsonerror;
 
-           // hey there's data let's process it 
-           if ( (jsonevent = json_loads(sendline, 0, &jsonerror)) == NULL )
+           /* hey there's data let's process it */
+	   jsonevent = json_loads(sendline, 0, &jsonerror);
+           if (jsonevent== NULL)
 	   {
 		/* json not parsed ok then push jsonified version of msg */
 	   	jsonevent = json_object();
 		json_object_set(jsonevent, "message", json_string(sendline)); 
            }
-           // json parsed ok
+           /* json parsed ok */
 	   for (size_t i = 0; i < extra_fields_len; i++)
 	   {
 	   	json_object_set(jsonevent, extra_fields[i].key, \
