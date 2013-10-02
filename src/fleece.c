@@ -202,13 +202,14 @@ int main(int argc, char**argv)
 
     while (fgets(sendline, window_size, stdin) != NULL)
     {
-       if(strlen(sendline) == 0)
+       if (strlen(sendline) == 0)
        {
            /* no data let's not burn cpu for nothing */
            sleep(1);
        } else {
            json_t *jsonevent;
            json_error_t jsonerror;
+	   char *jsoneventstring;
 
            /* hey there's data let's process it */
 	   jsonevent = json_loads(sendline, 0, &jsonerror);
@@ -230,10 +231,11 @@ int main(int argc, char**argv)
 	   json_object_set(jsonevent, "host", json_string(hostname)); 
 
 	   /* copy modified json string to sendline */
-	   strcpy(sendline, json_dumps(jsonevent,JSON_COMPACT));
+	   jsoneventstring = json_dumps(jsonevent,JSON_COMPACT);
+	   strcpy(sendline, jsoneventstring);
 
-	   sendto( sockfd, sendline,  strlen(sendline), 0, \
-	   	(struct sockaddr *)&servaddr, 	sizeof(servaddr));
+	   sendto(sockfd, sendline, strlen(sendline), 0, \
+	   	(struct sockaddr *)&servaddr, sizeof(servaddr));
 	   free(jsonevent);
       }
     } /* loop forever, reading from a file */
