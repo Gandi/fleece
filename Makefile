@@ -1,4 +1,4 @@
-.PHONY : info build strip clean testjson testplain
+.PHONY : help build strip clean testjson testplain
 
 VERSION=0.1
 
@@ -14,9 +14,9 @@ CC=gcc
 CFLAGS+=-Iinclude
 LDFLAGS+=-Llib
 
-default: info
+default: build
 
-info:
+help:
 	@echo "----------------------------------------------------------------------"
 	@echo "This Makefile handles the following targets:"
 	@echo "     build  - builds fleece"
@@ -48,9 +48,6 @@ testplain:
 	else \
 		@echo "fleece binary was not found. Did you build it ?";\
 	fi
-
-strip: build 
-	strip fleece
 
 str.o: str.c str.h
 fleece.o: fleece.o fleece.h
