@@ -92,11 +92,20 @@ void usage(const char *prog) {
   }
 } /* usage */
 
+
+
 int main(int argc, char**argv)
 {
+    /* declarations and initialisations */
     int sockfd,i,c;
+    size_t j = 0;
+
     struct sockaddr_in servaddr;
     char sendline[1024];
+
+    json_t *jsonevent;
+    json_error_t jsonerror;
+    char *jsoneventstring;
 
     struct option *getopt_options = NULL;
 
@@ -104,6 +113,12 @@ int main(int argc, char**argv)
 
     struct kv *extra_fields = NULL;
     size_t extra_fields_len = 0;
+
+    char *tmp;
+    char *host;
+    unsigned short port;
+    size_t window_size;
+    window_size = (size_t)1024;
 
     /* convert the 'option_doc' array into a 'struct option' array 
      * for use with getopt_long_only */
@@ -119,12 +134,6 @@ int main(int argc, char**argv)
     getopt_options = realloc(getopt_options, (i+1) * sizeof(struct option));
     getopt_options[i].name = NULL;
   
-    char *tmp;
-    char *host;
-    unsigned short port;
-    size_t window_size;
-    window_size = (size_t)1024;
-
     while (i = -1, \
 	c = getopt_long_only(argc, argv, "+hv", getopt_options, &i), c != -1) {
       switch (c) {
@@ -191,7 +200,7 @@ int main(int argc, char**argv)
 
     gethostname(hostname, sizeof(hostname));
 
-    sockfd=socket(AF_INET,SOCK_DGRAM,0);
+    sockfd = socket(AF_INET,SOCK_DGRAM, 0);
 
     bzero(&servaddr,sizeof(servaddr));
     servaddr.sin_family = AF_INET;
@@ -207,10 +216,6 @@ int main(int argc, char**argv)
            /* no data let's not burn cpu for nothing */
            sleep(1);
        } else {
-           json_t *jsonevent;
-           json_error_t jsonerror;
-	   char *jsoneventstring;
-
            /* hey there's data let's process it */
 	   jsonevent = json_loads(sendline, 0, &jsonerror);
            if (jsonevent== NULL)
@@ -220,10 +225,11 @@ int main(int argc, char**argv)
 		json_object_set(jsonevent, "message", json_string(sendline)); 
            }
            /* json parsed ok */
-	   for (size_t i = 0; i < extra_fields_len; i++)
+	   while (j < extra_fields_len)
 	   {
-	   	json_object_set(jsonevent, extra_fields[i].key, \
-	   		 json_string(extra_fields[i].value));
+	   	json_object_set(jsonevent, extra_fields[j].key, \
+	   		 json_string(extra_fields[j].value));
+		j++;
 	   }
 	
             /* add mandatory fields */
@@ -237,7 +243,7 @@ int main(int argc, char**argv)
 	   sendto(sockfd, sendline, strlen(sendline), 0, \
 	   	(struct sockaddr *)&servaddr, sizeof(servaddr));
 
-	   /* clean memory */
+	   /* free memory */
 	   free(jsonevent);
 	   free(jsoneventstring);
       }
