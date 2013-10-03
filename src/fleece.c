@@ -116,7 +116,7 @@ int main(int argc, char**argv)
 
     char *host = "localhost";
     unsigned short port = 12345;
- 
+
     char *tmp;
     size_t window_size;
     window_size = (size_t)1024;
