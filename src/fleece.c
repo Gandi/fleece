@@ -114,9 +114,10 @@ int main(int argc, char**argv)
     struct kv *extra_fields = NULL;
     size_t extra_fields_len = 0;
 
+    char *host = "localhost";
+    unsigned short port = 12345;
+ 
     char *tmp;
-    char *host;
-    unsigned short port;
     size_t window_size;
     window_size = (size_t)1024;
 

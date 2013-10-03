@@ -9,9 +9,7 @@ VERSION = $(shell dpkg-parsechangelog | sed -ne 's/^Version: \(.*\)/\1/p')
 #clean:
 #	dh_clean
 
-binary: binary-arch
-
-binary-arch:
+build:
 	make
 
 install:
