@@ -1,3 +1,9 @@
+fleece (0.3-1) unstable; urgency=low
+
+  * New version as the C code version replace the python code.
+
+ -- Nicolas Chipaux <aegiap@gandi.net>  Thu, 03 Oct 2013 15:40:20 +0200
+
 fleece (0.1-1) unstable; urgency=low
 
   * Initial release.
