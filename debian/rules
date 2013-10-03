@@ -1,0 +1,23 @@
+#!/usr/bin/make -f
+include /usr/share/cdbs/1/rules/debhelper.mk
+
+# Uncomment to enable verbose mode.
+export DH_VERBOSE=1
+
+VERSION = $(shell dpkg-parsechangelog | sed -ne 's/^Version: \(.*\)/\1/p')
+
+#clean:
+#	dh_clean
+
+binary: binary-arch
+
+binary-arch:
+	make
+
+install:
+	dh_testdir
+	dh_testroot
+	dh_installdirs
+	dh_install
+
+.PHONY: build binary-arch binary install
