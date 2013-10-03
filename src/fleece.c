@@ -226,11 +226,10 @@ int main(int argc, char**argv)
 		json_object_set(jsonevent, "message", json_string(sendline)); 
            }
            /* json parsed ok */
-	   while (j < extra_fields_len)
+	   for ( j = 0; j < extra_fields_len; j++)
 	   {
 	   	json_object_set(jsonevent, extra_fields[j].key, \
 	   		 json_string(extra_fields[j].value));
-		j++;
 	   }
 	
             /* add mandatory fields */

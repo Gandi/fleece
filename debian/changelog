@@ -1,3 +1,9 @@
+fleece (0.3-2) unstable; urgency=low
+
+  * Fix the json extra values disappearing bug
+
+ -- beorn <beorn@thrain.gandi.net>  Thu, 03 Oct 2013 16:34:53 +0200
+
 fleece (0.3-1) unstable; urgency=low
 
   * New version as the C code version replace the python code.
