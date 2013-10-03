@@ -1,4 +1,4 @@
-Source: fleecec
+Source: fleece
 Section: admin
 Priority: optional
 Maintainer: Aurelien ROUGEMONT <beorn@gandi.net>
@@ -8,8 +8,8 @@ Standards-Version: 3.9.1
 #Vcs-Git: ssh://git.gandi.net/srv/git/gandi/fleece.git
 Vcs-Browser: http://git.gandi.net/?p=fleece.git;a=tree;h=refs/heads/C99;hb=C99
 
-Package: fleecec
-Architecture: amd64
-Depends: libjansson4, libjemalloc1
-Description: Simple udp jsonifier from stdin.
+Package: fleece
+Architecture: any
+Depends: libjansson4, libjemalloc1, ${shlibs:Depends}
+Description: simple udp jsonifier from stdin.
  Simple udp jsonifier from stdin. Meant for piping apache logs.
