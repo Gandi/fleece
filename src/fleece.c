@@ -25,6 +25,9 @@
 */
 
 #include <sys/socket.h>
+#include <sys/types.h>
+#include <sys/select.h>
+
 #include <netinet/in.h>
 #include <arpa/inet.h>
 
@@ -39,6 +42,8 @@
 #include <strings.h>
 #include "str.h"
 
+#include <getopt.h>
+#include <unistd.h>
 #include <jansson.h>
 
 #define BUFFERSIZE 16384
@@ -75,7 +80,7 @@ struct kv {
 static struct option_doc options[] = {
   { "help", no_argument, opt_help, "show this help" },
   { "version", no_argument, opt_version, "show the version of fleece" },
-  { "field", required_argument, opt_field, 
+  { "field", required_argument, opt_field,
     "Add a custom key-value mapping to every line emitted" },
   { "host", required_argument, opt_host,
     "The hostname to send udp messages to" },
@@ -103,9 +108,8 @@ void usage(const char *prog) {
 int main(int argc, char**argv)
 {
     /* declarations and initialisations */
-    int sockfd,i,c;
+    int sockfd, i, c, retval;
     size_t j = 0;
-
 
     struct sockaddr_in servaddr;
     char sendline[1024];
@@ -130,7 +134,12 @@ int main(int argc, char**argv)
     size_t window_size;
     window_size = (size_t)1024;
 
-    /* convert the 'option_doc' array into a 'struct option' array 
+    /* File descriptors for udp and stdin */
+    fd_set fds;
+
+    struct timeval tv;
+
+    /* convert the 'option_doc' array into a 'struct option' array
      * for use with getopt_long_only */
     for (i = 0; options[i].name != NULL; i++) {
       getopt_options = realloc(getopt_options, (i+1) * sizeof(struct option));
@@ -143,7 +152,7 @@ int main(int argc, char**argv)
     /* Add one last item for the list terminator NULL */
     getopt_options = realloc(getopt_options, (i+1) * sizeof(struct option));
     getopt_options[i].name = NULL;
-  
+
     while (i = -1,
 	c = getopt_long_only(argc, argv, "+hv", getopt_options, &i), c != -1) {
       switch (c) {
@@ -190,76 +199,97 @@ int main(int argc, char**argv)
       }
     }
     free(getopt_options);
-  
+
     if (host == NULL) {
       printf("Missing --host flag\n");
       usage(argv[0]);
       return 1;
     }
-  
+
     if (port == 0) {
       printf("Missing --port flag\n");
       usage(argv[0]);
       return 1;
     }
-  
+
     argc -= optind;
     argv += optind;
 
-    /*
-     * prepare info to send stuff
-     */
+    /*  prepare info to send stuff */
 
     gethostname(hostname, sizeof(hostname));
 
     sockfd = socket(AF_INET,SOCK_DGRAM, 0);
 
+    /* prepare udp send */
     bzero(&servaddr,sizeof(servaddr));
     servaddr.sin_family = AF_INET;
     servaddr.sin_addr.s_addr=inet_addr(host);
     servaddr.sin_port=htons(port);
+
+    /* prepare select */
+    FD_ZERO(&fds);
+    FD_SET(0, &fds);
+    FD_SET(sockfd, &fds);\
 
     if(!quietmode)
     {
         printf("fleece: sending jsonified stdin to %s:%i\n", host, port);
     }
 
-    while (fgets(sendline, window_size, stdin) != NULL)
+    while(1)
     {
-       if (strlen(sendline) == 0)
-       {
-           /* no data let's not burn cpu for nothing */
-           sleep(1);
-       } else {
-           /* hey there's data let's process it */
-	   jsonevent = json_loads(sendline, 0, &jsonerror);
-           if (jsonevent== NULL)
-	   {
-		/* json not parsed ok then push jsonified version of msg */
-	   	jsonevent = json_object();
-		json_object_set(jsonevent, "message", json_string(sendline)); 
-           }
-           /* json parsed ok */
-	   for ( j = 0; j < extra_fields_len; j++)
-	   {
-	   	json_object_set(jsonevent, extra_fields[j].key, \
-	   		 json_string(extra_fields[j].value));
-	   }
-	
-            /* add mandatory fields */
-	   json_object_set(jsonevent, "file", json_string("-"));
-	   json_object_set(jsonevent, "host", json_string(hostname)); 
+        tv.tv_sec = 1;
+        tv.tv_usec = 0;
+        retval = select(1, &fds, NULL, NULL, &tv);
 
-	   /* copy modified json string to sendline */
-	   jsoneventstring = json_dumps(jsonevent,JSON_COMPACT);
-	   strcpy(sendline, jsoneventstring);
+        if (retval)
+        {
+            if(FD_ISSET(STDIN_FILENO, &fds))
+            {
+                while (fgets(sendline, window_size, stdin) != NULL)
+                {
+                    /* hey there's data let's process it */
+                    jsonevent = json_loads(sendline, 0, &jsonerror);
+                    if (jsonevent== NULL)
+                    {
+                         /* json not parsed ok then push jsonified version of msg */
+                         jsonevent = json_object();
+                         json_object_set(jsonevent, "message", json_string(sendline));
+                    }
+                    /* json parsed ok */
+                    for ( j = 0; j < extra_fields_len; j++)
+                    {
+                         json_object_set(jsonevent, extra_fields[j].key, \
+                                  json_string(extra_fields[j].value));
+                    }
 
-	   sendto(sockfd, sendline, strlen(sendline), 0, \
-	   	(struct sockaddr *)&servaddr, sizeof(servaddr));
+                     /* add mandatory fields */
+                    json_object_set(jsonevent, "file", json_string("-"));
+                    json_object_set(jsonevent, "host", json_string(hostname));
 
-	   /* free memory */
-	   free(jsonevent);
-	   free(jsoneventstring);
-      }
-    } /* loop forever, reading from a file */
+                    /* copy modified json string to sendline */
+                    jsoneventstring = json_dumps(jsonevent,JSON_COMPACT);
+                    strcpy(sendline, jsoneventstring);
+
+                    sendto(sockfd, sendline, strlen(sendline), 0, \
+                         (struct sockaddr *)&servaddr, sizeof(servaddr));
+
+                    /* free memory */
+
+                    free(jsonevent);
+                    free(jsoneventstring);
+                }
+                FD_CLR(STDIN_FILENO,&fds);
+            }
+        }
+        else
+        {
+            /* why did it return data was it a EOF ? is so quit clean */
+            if(feof(stdin))
+            {
+                exit(0);
+            }
+        }
+    }
 }

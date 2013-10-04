@@ -1,2 +1,1 @@
-* Switch to select() instead of this ugly sleep(1)
 * Handle hostname with periodic refresh
