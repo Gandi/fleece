@@ -69,7 +69,7 @@ struct kv {
 static struct option_doc options[] = {
   { "help", no_argument, opt_help, "show this help" },
   { "version", no_argument, opt_version, "show the version of fleece" },
-  { "field", required_argument, opt_field, 
+  { "field", required_argument, opt_field,
     "Add a custom key-value mapping to every line emitted" },
   { "host", required_argument, opt_host,
     "The hostname to send udp messages to" },
@@ -121,7 +121,7 @@ int main(int argc, char**argv)
     size_t window_size;
     window_size = (size_t)1024;
 
-    /* convert the 'option_doc' array into a 'struct option' array 
+    /* convert the 'option_doc' array into a 'struct option' array
      * for use with getopt_long_only */
     for (i = 0; options[i].name != NULL; i++) {
       getopt_options = realloc(getopt_options, (i+1) * sizeof(struct option));
@@ -134,7 +134,7 @@ int main(int argc, char**argv)
     /* Add one last item for the list terminator NULL */
     getopt_options = realloc(getopt_options, (i+1) * sizeof(struct option));
     getopt_options[i].name = NULL;
-  
+
     while (i = -1,
 	c = getopt_long_only(argc, argv, "+hv", getopt_options, &i), c != -1) {
       switch (c) {
@@ -173,25 +173,25 @@ int main(int argc, char**argv)
           break;
         default:
 	  printf("Not handled\n");
-  
+
           usage(argv[0]);
           return 1;
       }
     }
     free(getopt_options);
-  
+
     if (host == NULL) {
       printf("Missing --host flag\n");
       usage(argv[0]);
       return 1;
     }
-  
+
     if (port == 0) {
       printf("Missing --port flag\n");
       usage(argv[0]);
       return 1;
     }
-  
+
     argc -= optind;
     argv += optind;
 
@@ -223,7 +223,7 @@ int main(int argc, char**argv)
 	   {
 		/* json not parsed ok then push jsonified version of msg */
 	   	jsonevent = json_object();
-		json_object_set(jsonevent, "message", json_string(sendline)); 
+		json_object_set(jsonevent, "message", json_string(sendline));
            }
            /* json parsed ok */
 	   for ( j = 0; j < extra_fields_len; j++)
@@ -231,10 +231,10 @@ int main(int argc, char**argv)
 	   	json_object_set(jsonevent, extra_fields[j].key, \
 	   		 json_string(extra_fields[j].value));
 	   }
-	
+
             /* add mandatory fields */
 	   json_object_set(jsonevent, "file", json_string("-"));
-	   json_object_set(jsonevent, "host", json_string(hostname)); 
+	   json_object_set(jsonevent, "host", json_string(hostname));
 
 	   /* copy modified json string to sendline */
 	   jsoneventstring = json_dumps(jsonevent,JSON_COMPACT);
