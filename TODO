@@ -1,0 +1,3 @@
+* Switch to select() instead of this ugly sleep(1)
+* Add a quiet getopt entry
+* Handle hostname with periodic refresh
