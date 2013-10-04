@@ -114,8 +114,8 @@ int main(int argc, char**argv)
     struct kv *extra_fields = NULL;
     size_t extra_fields_len = 0;
 
-    char *host = "localhost";
-    unsigned short port = 12345;
+    char *host = NULL;
+    unsigned short port = 0;
 
     char *tmp;
     size_t window_size;
@@ -135,7 +135,7 @@ int main(int argc, char**argv)
     getopt_options = realloc(getopt_options, (i+1) * sizeof(struct option));
     getopt_options[i].name = NULL;
   
-    while (i = -1, \
+    while (i = -1,
 	c = getopt_long_only(argc, argv, "+hv", getopt_options, &i), c != -1) {
       switch (c) {
         case opt_version:
