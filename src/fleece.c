@@ -49,9 +49,29 @@
 #define BUFFERSIZE 16384
 #define FLEECE_VERSION "0.1"
 
+struct addrinfo {
+    int              ai_flags;
+    int              ai_family;
+    int              ai_socktype;
+    int              ai_protocol;
+    socklen_t        ai_addrlen;
+    struct sockaddr *ai_addr;
+    char            *ai_canonname;
+    struct addrinfo *ai_next;
+};
+
+
+
 extern char *strdup(const char *s);
 extern char *strsep(char **stringp, const char *delim);
-extern int gethostname(char *name, size_t namelen);
+extern int getaddrinfo(const char *node, const char *service,
+                 const struct addrinfo *hints,
+                 struct addrinfo **res);
+
+extern void freeaddrinfo(struct addrinfo *res);
+extern const char *gai_strerror(int errcode);
+
+extern int gethostname(char *name, size_t len);
 
 typedef enum {
   opt_help = 'h',
@@ -69,6 +89,7 @@ struct option_doc {
   int         val;
   const char *documentation;
 };
+
 
 struct kv {
   char *key;
@@ -105,6 +126,34 @@ void usage(const char *prog) {
   }
 } /* usage */
 
+int hostname_to_ip(char *hostname , char *ip)
+{
+    struct addrinfo hints, *servinfo, *p;
+    struct sockaddr_in *h;
+    int rv;
+
+    memset(&hints, 0, sizeof hints);
+    hints.ai_family = AF_UNSPEC; // use AF_INET6 to force IPv6
+    hints.ai_socktype = SOCK_STREAM;
+
+    if ( (rv = getaddrinfo( hostname , "http" , &hints , &servinfo)) != 0)
+    {
+        fprintf(stderr, "getaddrinfo: %s\n", gai_strerror(rv));
+        return 1;
+    }
+
+    // loop through all the results and connect to the first we can
+    for(p = servinfo; p != NULL; p = p->ai_next)
+    {
+        h = (struct sockaddr_in *) p->ai_addr;
+        strcpy(ip , inet_ntoa( h->sin_addr ) );
+
+    }
+
+    freeaddrinfo(servinfo); // all done with this structure
+    return 0;
+}
+
 int main(int argc, char**argv)
 {
     /* declarations and initialisations */
@@ -128,6 +177,7 @@ int main(int argc, char**argv)
     size_t extra_fields_len = 0;
 
     char *host = NULL;
+    char ip[100];
     unsigned short port = 0;
 
     char *tmp;
@@ -183,8 +233,8 @@ int main(int argc, char**argv)
             exit(1);
           }
           extra_fields_len += 1;
-          extra_fields = realloc(extra_fields, \
-		extra_fields_len * sizeof(struct kv));
+          extra_fields = realloc(extra_fields,
+		                extra_fields_len * sizeof(struct kv));
           *tmp = '\0'; /* turn '=' into null terminator */
           tmp++; /* skip to first char of value */
           extra_fields[extra_fields_len - 1].key = strdup(optarg);
@@ -224,7 +274,9 @@ int main(int argc, char**argv)
     /* prepare udp send */
     bzero(&servaddr,sizeof(servaddr));
     servaddr.sin_family = AF_INET;
-    servaddr.sin_addr.s_addr=inet_addr(host);
+    hostname_to_ip(host,ip);
+    printf("%s has ip %s\n", host, ip);
+    servaddr.sin_addr.s_addr=inet_addr(ip);
     servaddr.sin_port=htons(port);
 
     /* prepare select */
