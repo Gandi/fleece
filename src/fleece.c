@@ -130,15 +130,15 @@ int hostname_to_ip(char *hostname, char *ip)
 {
     struct addrinfo hints, *servinfo, *p;
     struct sockaddr_in *h;
-    int rv;
+    int retval;
 
     memset(&hints, 0, sizeof hints);
     hints.ai_family = AF_UNSPEC; // use AF_INET6 to force IPv6
     hints.ai_socktype = SOCK_STREAM;
 
-    if ( (rv = getaddrinfo( hostname , "http" , &hints , &servinfo)) != 0)
+    if ( (retval = getaddrinfo( hostname , "http" , &hints , &servinfo)) != 0)
     {
-        fprintf(stderr, "getaddrinfo: %s\n", gai_strerror(rv));
+        fprintf(stderr, "getaddrinfo: %s\n", gai_strerror(retval));
         return 1;
     }
 
@@ -147,7 +147,6 @@ int hostname_to_ip(char *hostname, char *ip)
     {
         h = (struct sockaddr_in *) p->ai_addr;
         strcpy(ip , inet_ntoa( h->sin_addr ) );
-
     }
 
     freeaddrinfo(servinfo); // all done with this structure
@@ -289,6 +288,7 @@ int main(int argc, char**argv)
         printf("fleece: sending jsonified stdin to %s:%i\n", host, port);
     }
 
+    /* lets loop */
     while(1)
     {
         tv.tv_sec = 1;
@@ -328,7 +328,6 @@ int main(int argc, char**argv)
                          (struct sockaddr *)&servaddr, sizeof(servaddr));
 
                     /* free memory */
-
                     free(jsonevent);
                     free(jsoneventstring);
                 }
