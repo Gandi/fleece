@@ -126,7 +126,7 @@ void usage(const char *prog) {
   }
 } /* usage */
 
-int hostname_to_ip(char *hostname , char *ip)
+int hostname_to_ip(char *hostname, char *ip)
 {
     struct addrinfo hints, *servinfo, *p;
     struct sockaddr_in *h;
@@ -275,7 +275,6 @@ int main(int argc, char**argv)
     bzero(&servaddr,sizeof(servaddr));
     servaddr.sin_family = AF_INET;
     hostname_to_ip(host,ip);
-    printf("%s has ip %s\n", host, ip);
     servaddr.sin_addr.s_addr=inet_addr(ip);
     servaddr.sin_port=htons(port);
 
@@ -286,6 +285,7 @@ int main(int argc, char**argv)
 
     if(!quietmode)
     {
+        printf("%s has ip %s\n", host, ip);
         printf("fleece: sending jsonified stdin to %s:%i\n", host, port);
     }
 
