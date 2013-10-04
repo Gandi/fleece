@@ -27,14 +27,19 @@
 #include <sys/socket.h>
 #include <netinet/in.h>
 #include <arpa/inet.h>
+
 #include <stdio.h>
 #include <stdlib.h>
+#include <stdbool.h>
+#include <unistd.h>
+
 #include <getopt.h>
+
 #include <string.h>
 #include <strings.h>
-#include <unistd.h>
-#include <jansson.h>
 #include "str.h"
+
+#include <jansson.h>
 
 #define BUFFERSIZE 16384
 #define FLEECE_VERSION "0.1"
@@ -48,6 +53,7 @@ typedef enum {
   opt_version = 'v',
   opt_field,
   opt_host,
+  opt_quiet,
   opt_port,
   opt_window_size,
 } optlist_t;
@@ -75,6 +81,8 @@ static struct option_doc options[] = {
     "The hostname to send udp messages to" },
   { "port", required_argument, opt_port,
     "The port to connect on the udp server" },
+  { "quiet", no_argument, opt_quiet,
+    "Disable outputs" },
   { "window_size", optional_argument, opt_window_size,
     "The window size" },
   { NULL, 0, 0, NULL },
@@ -92,13 +100,12 @@ void usage(const char *prog) {
   }
 } /* usage */
 
-
-
 int main(int argc, char**argv)
 {
     /* declarations and initialisations */
     int sockfd,i,c;
     size_t j = 0;
+
 
     struct sockaddr_in servaddr;
     char sendline[1024];
@@ -108,6 +115,8 @@ int main(int argc, char**argv)
     char *jsoneventstring;
 
     struct option *getopt_options = NULL;
+
+    bool quietmode = false;
 
     char hostname[200];
 
@@ -153,6 +162,9 @@ int main(int argc, char**argv)
         case opt_window_size:
           window_size = (size_t)atoi(optarg);
           break;
+        case opt_quiet:
+          quietmode = true;
+          break;
         case opt_field:
           tmp = strchr(optarg, '=');
           if (tmp == NULL) {
@@ -173,7 +185,6 @@ int main(int argc, char**argv)
           break;
         default:
 	  printf("Not handled\n");
-  
           usage(argv[0]);
           return 1;
       }
@@ -208,7 +219,10 @@ int main(int argc, char**argv)
     servaddr.sin_addr.s_addr=inet_addr(host);
     servaddr.sin_port=htons(port);
 
-    printf("fleece: sending jsonified stdin to %s:%i\n", host, port);
+    if(!quietmode)
+    {
+        printf("fleece: sending jsonified stdin to %s:%i\n", host, port);
+    }
 
     while (fgets(sendline, window_size, stdin) != NULL)
     {
