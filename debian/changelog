@@ -1,3 +1,11 @@
+fleece (0.3-3) unstable; urgency=low
+
+  * Add quiet mode
+  * Add fqdn resolution to ip
+  * Remove ugly sleep() and now use select() with timeout
+
+ -- beorn <beorn@thrain.gandi.net>  Mon, 07 Oct 2013 11:09:56 +0200
+
 fleece (0.3-2) unstable; urgency=low
 
   * Fix the json extra values disappearing bug
