@@ -1,3 +1,9 @@
+fleece (0.3-4) unstable; urgency=low
+
+  * revert 14222c64e79987ed26ff35df419536cb1662eca8 (sleep() => select())
+
+ -- beorn <beorn@thrain.gandi.net>  Mon, 07 Oct 2013 14:42:04 +0200
+
 fleece (0.3-3) unstable; urgency=low
 
   * Add quiet mode
