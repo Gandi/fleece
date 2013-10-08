@@ -58,8 +58,6 @@ struct addrinfo {
     struct addrinfo *ai_next;
 };
 
-
-
 extern char *strdup(const char *s);
 extern char *strsep(char **stringp, const char *delim);
 extern int getaddrinfo(const char *node, const char *service,
@@ -154,7 +152,7 @@ int hostname_to_ip(char *hostname, char *ip)
 int main(int argc, char**argv)
 {
     /* declarations and initialisations */
-    int sockfd,i,c;
+    int sockfd, i, c, retval;
     size_t j = 0;
 
     struct sockaddr_in servaddr;
@@ -180,6 +178,10 @@ int main(int argc, char**argv)
     char *tmp;
     size_t window_size;
     window_size = (size_t)1024;
+
+    /* File descriptors for udp and stdin */
+    fd_set fds;
+    struct timeval tv;
 
     /* convert the 'option_doc' array into a 'struct option' array
      * for use with getopt_long_only */
@@ -271,6 +273,10 @@ int main(int argc, char**argv)
     servaddr.sin_addr.s_addr=inet_addr(ip);
     servaddr.sin_port=htons(port);
 
+    /* prepare select */
+    FD_ZERO(&fds);
+    FD_SET(0, &fds);
+
     if(!quietmode)
     {
         printf("%s has ip %s\n", host, ip);
@@ -281,8 +287,14 @@ int main(int argc, char**argv)
     {
        if (strlen(sendline) == 0)
        {
-           /* no data let's not burn cpu for nothing */
-           sleep(1);
+            /* no data let's not burn cpu for nothing */
+            tv.tv_sec = 1;
+            tv.tv_usec = 0;
+            retval = select(1, &fds, NULL, NULL, &tv);
+            if ( retval == -1 )
+            {
+                exit(0);
+            }
        } else {
            /* hey there's data let's process it */
 	   jsonevent = json_loads(sendline, 0, &jsonerror);
