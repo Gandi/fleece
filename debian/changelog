@@ -1,3 +1,9 @@
+fleece (0.3-7) unstable; urgency=low
+
+  *  Fix memory leak ( use *_new functions for oneshot use ) 
+
+ -- beorn <beorn@thrain.gandi.net>  Wed, 16 Oct 2013 11:44:05 +0200
+
 fleece (0.3-6) unstable; urgency=low
 
   * Fix memory leak in json_load//free 

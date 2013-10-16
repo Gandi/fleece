@@ -228,7 +228,7 @@ int main(int argc, char**argv)
           }
           extra_fields_len += 1;
           extra_fields = realloc(extra_fields,
-                        extra_fields_len * sizeof(struct kv));
+                                 extra_fields_len * sizeof(struct kv));
           *tmp = '\0'; /* turn '=' into null terminator */
           tmp++; /* skip to first char of value */
           extra_fields[extra_fields_len - 1].key = strdup(optarg);
@@ -296,35 +296,35 @@ int main(int argc, char**argv)
                 exit(0);
             }
        } else {
-           /* hey there's data let's process it */
-       jsonevent = json_loads(sendline, 0, &jsonerror);
-           if (jsonevent== NULL)
-       {
-        /* json not parsed ok then push jsonified version of msg */
-           jsonevent = json_object();
-        json_object_set(jsonevent, "message", json_string(sendline));
-           }
-           /* json parsed ok */
-       for ( j = 0; j < extra_fields_len; j++)
-       {
-           json_object_set(jsonevent, extra_fields[j].key, \
-                json_string(extra_fields[j].value));
-       }
+            /* hey there's data let's process it */
+            jsonevent = json_loads(sendline, 0, &jsonerror);
+            if (jsonevent== NULL)
+            {
+             /* json not parsed ok then push jsonified version of msg */
+                jsonevent = json_object();
+                json_object_set(jsonevent, "message", json_string(sendline));
+            }
+            /* json parsed ok */
+            for ( j = 0; j < extra_fields_len; j++)
+            {
+                json_object_set_new(jsonevent, extra_fields[j].key, \
+                     json_string(extra_fields[j].value));
+            }
 
             /* add mandatory fields */
-       json_object_set(jsonevent, "file", json_string("-"));
-       json_object_set(jsonevent, "host", json_string(hostname));
+            json_object_set_new(jsonevent, "file", json_string("-"));
+            json_object_set_new(jsonevent, "host", json_string(hostname));
 
-       /* copy modified json string to sendline */
-       jsoneventstring = json_dumps(jsonevent,JSON_COMPACT);
-       strcpy(sendline, jsoneventstring);
+            /* copy modified json string to sendline */
+            jsoneventstring = json_dumps(jsonevent,JSON_COMPACT);
+            strcpy(sendline, jsoneventstring);
 
-       sendto(sockfd, sendline, strlen(sendline), 0, \
-           (struct sockaddr *)&servaddr, sizeof(servaddr));
+            sendto(sockfd, sendline, strlen(sendline), 0, \
+                (struct sockaddr *)&servaddr, sizeof(servaddr));
 
-       /* free memory */
-           json_decref(jsonevent);
-       free(jsoneventstring);
-      }
+            /* free memory */
+            json_decref(jsonevent);
+            free(jsoneventstring);
+            }
     } /* loop forever, reading from a file */
 }
