@@ -1,3 +1,9 @@
+fleece (0.3-6) unstable; urgency=low
+
+  * Fix memory leak in json_load//free 
+
+ -- beorn <beorn@thrain.gandi.net>  Wed, 16 Oct 2013 10:23:24 +0200
+
 fleece (0.3-5) unstable; urgency=low
 
   * Fixes for good the replacement of sleep() with select() 
