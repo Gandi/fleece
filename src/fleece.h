@@ -26,6 +26,8 @@ struct kv {
 }; /* struct kv */
 
 struct fleece_options {
+    int argc;
+    char **argv;
     char *host;
     char ip[100];
     unsigned short port;
@@ -90,3 +92,72 @@ struct option *build_getopt_options() {
     return getopt_options;
 } /* build_getopt_options */
 
+
+void *configure_fleece_from_cli(fleece_options_t *flconf, struct option **getopt_options) {
+    int c,i;
+    char *tmp;
+
+    while (i = -1,
+    c = getopt_long_only(flconf->argc, flconf->argv, "+hv", *getopt_options, &i), c != -1) {
+      switch (c) {
+        case opt_version:
+          printf("Fleece version %s\n",FLEECE_VERSION);
+          return 0;
+        case opt_help:
+          usage(flconf->argv[0]);
+          return 0;
+        case opt_host:
+          flconf->host = strdup(optarg);
+          break;
+        case opt_port:
+          flconf->port = (unsigned short)atoi(optarg);
+          break;
+        case opt_window_size:
+          flconf->window_size = (size_t)atoi(optarg);
+          break;
+        case opt_quiet:
+          flconf->quietmode = true;
+          break;
+        case opt_field:
+          tmp = strchr(optarg, '=');
+          if (tmp == NULL) {
+            printf("Invalid --field : expected 'foo=bar' form " \
+                   "didn't find '=' in '%s'", optarg);
+            usage(flconf->argv[0]);
+            exit(1);
+          }
+          flconf->extra_fields_len += 1;
+          flconf->extra_fields = realloc(flconf->extra_fields,
+                                 flconf->extra_fields_len * sizeof(struct kv));
+          *tmp = '\0'; /* turn '=' into null terminator */
+          tmp++; /* skip to first char of value */
+          flconf->extra_fields[flconf->extra_fields_len - 1].key = strdup(optarg);
+          flconf->extra_fields[flconf->extra_fields_len - 1].key_len = strlen(optarg);
+          flconf->extra_fields[flconf->extra_fields_len - 1].value = strdup(tmp);
+          flconf->extra_fields[flconf->extra_fields_len - 1].value_len = strlen(tmp);
+          break;
+        default:
+      printf("Not handled\n");
+          usage(flconf->argv[0]);
+          return NULL;
+      }
+    }
+    free(*getopt_options);
+
+    if (flconf->host == NULL) {
+      printf("Missing --host flag\n");
+      usage(flconf->argv[0]);
+      return NULL;
+    }
+
+    if (flconf->port == 0) {
+      printf("Missing --port flag\n");
+      usage(flconf->argv[0]);
+      return NULL;
+    }
+
+    flconf->argc -= optind;
+    flconf->argv += optind;
+
+    return flconf;
+}

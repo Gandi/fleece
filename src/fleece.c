@@ -51,11 +51,10 @@
 int main(int argc, char**argv)
 {
     /* declarations and initialisations */
-    int sockfd, i, c, retval;
+    int sockfd, retval;
     size_t j = 0;
 
     char hostname[200];
-    char *tmp;
 
     struct sockaddr_in servaddr;
     char sendline[1024];
@@ -68,6 +67,8 @@ int main(int argc, char**argv)
 
     /* initialize fleece configuration struct */
     fleece_options_t flconf  = {
+        argc,
+        argv,
         NULL,
         "",
         (unsigned short) 0,
@@ -84,68 +85,9 @@ int main(int argc, char**argv)
     /* convert the 'option_doc' array into a 'struct option' array
      * for use with getopt_long_only */
     getopt_options = build_getopt_options();
-
-    while (i = -1,
-    c = getopt_long_only(argc, argv, "+hv", getopt_options, &i), c != -1) {
-      switch (c) {
-        case opt_version:
-          printf("Fleece version %s\n",FLEECE_VERSION);
-          return 0;
-        case opt_help:
-          usage(argv[0]);
-          return 0;
-        case opt_host:
-          flconf.host = strdup(optarg);
-          break;
-        case opt_port:
-          flconf.port = (unsigned short)atoi(optarg);
-          break;
-        case opt_window_size:
-          flconf.window_size = (size_t)atoi(optarg);
-          break;
-        case opt_quiet:
-          flconf.quietmode = true;
-          break;
-        case opt_field:
-          tmp = strchr(optarg, '=');
-          if (tmp == NULL) {
-            printf("Invalid --field : expected 'foo=bar' form " \
-                   "didn't find '=' in '%s'", optarg);
-            usage(argv[0]);
-            exit(1);
-          }
-          flconf.extra_fields_len += 1;
-          flconf.extra_fields = realloc(flconf.extra_fields,
-                                 flconf.extra_fields_len * sizeof(struct kv));
-          *tmp = '\0'; /* turn '=' into null terminator */
-          tmp++; /* skip to first char of value */
-          flconf.extra_fields[flconf.extra_fields_len - 1].key = strdup(optarg);
-          flconf.extra_fields[flconf.extra_fields_len - 1].key_len = strlen(optarg);
-          flconf.extra_fields[flconf.extra_fields_len - 1].value = strdup(tmp);
-          flconf.extra_fields[flconf.extra_fields_len - 1].value_len = strlen(tmp);
-          break;
-        default:
-      printf("Not handled\n");
-          usage(argv[0]);
-          return 1;
-      }
+    if(configure_fleece_from_cli(&flconf, &getopt_options) == NULL) {
+        exit(1);
     }
-    free(getopt_options);
-
-    if (flconf.host == NULL) {
-      printf("Missing --host flag\n");
-      usage(argv[0]);
-      return 1;
-    }
-
-    if (flconf.port == 0) {
-      printf("Missing --port flag\n");
-      usage(argv[0]);
-      return 1;
-    }
-
-    argc -= optind;
-    argv += optind;
 
     /*
      * prepare info to send stuff
