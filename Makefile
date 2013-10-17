@@ -28,7 +28,7 @@ help:
 	@echo "for tests : tcpdump -Xvelni lo port 12345"
 
 build: clean
-	$(CC) $(CFLAGS) -o fleece src/fleece.c src/str.c
+	$(CC) $(CFLAGS) -o fleece src/fleece.c src/str.c src/hostnameip.c
 
 clean:
 	rm -f fleece
@@ -48,6 +48,3 @@ testplain:
 	else \
 		@echo "fleece binary was not found. Did you build it ?";\
 	fi
-
-str.o: str.c str.h
-fleece.o: fleece.o fleece.h
