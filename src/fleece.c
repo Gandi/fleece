@@ -85,7 +85,7 @@ int main(int argc, char**argv)
     /* convert the 'option_doc' array into a 'struct option' array
      * for use with getopt_long_only */
     getopt_options = build_getopt_options();
-    if(configure_fleece_from_cli(&flconf, &getopt_options) == NULL) {
+    if (configure_fleece_from_cli(&flconf, &getopt_options) == NULL) {
         exit(1);
     }
 
@@ -99,7 +99,7 @@ int main(int argc, char**argv)
 
     bzero(&servaddr,sizeof(servaddr));
     servaddr.sin_family = AF_INET;
-    hostname_to_ip(flconf.host,flconf.ip);
+    hostname_to_ip(flconf.host, flconf.ip);
     servaddr.sin_addr.s_addr=inet_addr(flconf.ip);
     servaddr.sin_port=htons(flconf.port);
 
@@ -107,7 +107,7 @@ int main(int argc, char**argv)
     FD_ZERO(&fds);
     FD_SET(0, &fds);
 
-    if(!flconf.quietmode)
+    if (!flconf.quietmode)
     {
         printf("%s has ip %s\n", flconf.host, flconf.ip);
         printf("fleece: sending jsonified stdin to %s:%i\n", flconf.host, flconf.port);
