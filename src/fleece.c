@@ -54,7 +54,7 @@ int main(int argc, char**argv)
     int sockfd, retval;
     size_t j = 0;
 
-    char hostname[200];
+    char myhostname[200];
 
     struct sockaddr_in servaddr;
     char sendline[1024];
@@ -93,7 +93,7 @@ int main(int argc, char**argv)
      * prepare info to send stuff
      */
 
-    gethostname(hostname, sizeof(hostname));
+    gethostname(myhostname, sizeof(myhostname));
 
     sockfd = socket(AF_INET,SOCK_DGRAM, 0);
 
@@ -143,7 +143,7 @@ int main(int argc, char**argv)
 
              /* add mandatory fields */
              json_object_set_new(jsonevent, "file", json_string("-"));
-             json_object_set_new(jsonevent, "host", json_string(hostname));
+             json_object_set_new(jsonevent, "host", json_string(myhostname));
 
              /* copy modified json string to sendline */
              jsoneventstring = json_dumps(jsonevent,JSON_COMPACT);
