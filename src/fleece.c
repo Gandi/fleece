@@ -89,17 +89,16 @@ int main(int argc, char**argv)
         exit(1);
     }
 
-    /*
-     * prepare info to send stuff
-     */
-
+    /* who am i */
     gethostname(myhostname, sizeof(myhostname));
-
+    /* stdin */
     sockfd = socket(AF_INET,SOCK_DGRAM, 0);
-
+    /* prepare info to send stuff */
     bzero(&servaddr,sizeof(servaddr));
     servaddr.sin_family = AF_INET;
+
     hostname_to_ip(flconf.host, flconf.ip);
+
     servaddr.sin_addr.s_addr=inet_addr(flconf.ip);
     servaddr.sin_port=htons(flconf.port);
 
@@ -157,4 +156,5 @@ int main(int argc, char**argv)
              free(jsoneventstring);
              }
     } /* loop forever, reading from a file */
+    return 0;
 }
