@@ -131,11 +131,10 @@ int main(int argc, char**argv)
              {
               /* json not parsed ok then push jsonified version of msg */
                  jsonevent = json_object();
+                 if (jsonevent == NULL)
+                     continue;
                  json_object_set(jsonevent, "message", json_string(sendline));
              }
-
-	     if (jsonevent== NULL)
-		continue;
 
              /* json parsed ok */
              for ( j = 0; j < flconf.extra_fields_len; j++)
@@ -150,14 +149,14 @@ int main(int argc, char**argv)
 
              /* copy modified json string to sendline */
              jsoneventstring = json_dumps(jsonevent,JSON_COMPACT);
-	     if (jsoneventstring) {
+             if (jsoneventstring) {
                  sendto(sockfd, jsoneventstring, strlen(jsoneventstring), 0, \
                      (struct sockaddr *)&servaddr, sizeof(servaddr));
 
                  /* free memory */
                  json_decref(jsonevent);
                  free(jsoneventstring);
-	     }
+             }
         }
     } /* loop forever, reading from a file */
     return 0;
