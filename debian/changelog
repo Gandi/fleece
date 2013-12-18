@@ -1,3 +1,9 @@
+fleece (0.3-9) unstable; urgency=low
+
+  * Fix leak when converting to json plain text input
+
+ -- Aurelien Rougemont <beorn@gandi.net>  Wed, 18 Dec 2013 14:45:43 +0100
+
 fleece (0.3-8) unstable; urgency=low
 
   * Fix general protection seen in webmail json logging.
