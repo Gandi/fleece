@@ -116,24 +116,24 @@ int main(int argc, char**argv)
     {
         if (strlen(sendline) == 0)
         {
-             /* no data let's not burn cpu for nothing */
-             tv.tv_sec = 1;
-             tv.tv_usec = 0;
-             retval = select(1, &fds, NULL, NULL, &tv);
-             if ( retval == -1 )
-             {
-                 exit(0);
-             }
+            /* no data let's not burn cpu for nothing */
+            tv.tv_sec = 1;
+            tv.tv_usec = 0;
+            retval = select(1, &fds, NULL, NULL, &tv);
+            if ( retval == -1 )
+            {
+                exit(0);
+            }
         } else {
-             /* hey there's data let's process it */
-             jsonevent = json_loads(sendline, 0, &jsonerror);
-             if (jsonevent== NULL)
-             {
-              /* json not parsed ok then push jsonified version of msg */
-                 jsonevent = json_object();
-                 if (jsonevent == NULL)
-                     continue;
-                 json_object_set(jsonevent, "message", json_string(sendline));
+            /* hey there's data let's process it */
+            jsonevent = json_loads(sendline, 0, &jsonerror);
+            if (jsonevent == NULL)
+            {
+            /*json not parsed ok then push jsonified version of msg */
+                jsonevent = json_object();
+                if (jsonevent == NULL)
+                    continue;
+                json_object_set_new(jsonevent, "message", json_string(sendline) );
              }
 
              /* json parsed ok */
@@ -154,9 +154,10 @@ int main(int argc, char**argv)
                      (struct sockaddr *)&servaddr, sizeof(servaddr));
 
                  /* free memory */
-                 json_decref(jsonevent);
                  free(jsoneventstring);
              }
+             json_object_clear(jsonevent);
+             json_decref(jsonevent);
         }
     } /* loop forever, reading from a file */
     return 0;
