@@ -54,10 +54,10 @@ int main(int argc, char**argv)
     int sockfd, retval;
     size_t j = 0;
 
-    char myhostname[200];
+    char myhostname[HOSTNAME_MAXSZ];
 
     struct sockaddr_in servaddr;
-    char sendline[1024];
+    char sendline[LINE_MAXSZ];
 
     json_t *jsonevent;
     json_error_t jsonerror;
@@ -72,13 +72,14 @@ int main(int argc, char**argv)
         NULL,
         "",
         (unsigned short) 0,
-        (size_t)1024,
+        (size_t)LINE_MAXSZ,
         NULL,
         (size_t)0,
         false
     };
 
     /* File descriptors for udp and stdin */
+    //TODO fgets_unlocked, no select
     fd_set fds;
     struct timeval tv;
 
@@ -104,7 +105,7 @@ int main(int argc, char**argv)
 
     /* prepare select */
     FD_ZERO(&fds);
-    FD_SET(0, &fds);
+    FD_SET(0, &fds); // should be 1 fo 0 !??
 
     if (!flconf.quietmode)
     {
@@ -119,12 +120,15 @@ int main(int argc, char**argv)
             /* no data let's not burn cpu for nothing */
             tv.tv_sec = 1;
             tv.tv_usec = 0;
+            // TODO replace with the non blocking stdin
             retval = select(1, &fds, NULL, NULL, &tv);
             if ( retval == -1 )
             {
                 exit(0);
             }
         } else {
+            // TODO send the log to remote syslog, directly, and after that treat this as json
+            syslog(trim(sendline));
             /* hey there's data let's process it */
             jsonevent = json_loads(sendline, 0, &jsonerror);
             if (jsonevent == NULL)

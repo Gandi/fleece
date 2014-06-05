@@ -1,5 +1,12 @@
 #define BUFFERSIZE 16384
-#define FLEECE_VERSION "0.1"
+#define FLEECE_VERSION "0.2"
+
+// a hostname could be greater than the 63 of original dns ?
+#define HOSTNAME_MAXSZ 100
+// that is received line from apache
+#define LINE_MAXSZ 1024
+// it is ipv4 now(so ~16), but then..
+#define IP_MAXSZ 100
 
 typedef enum {
     opt_help = 'h',
@@ -29,7 +36,7 @@ struct fleece_options {
     int argc;
     char **argv;
     char *host;
-    char ip[100];
+    char ip[IP_MAXSZ];
     unsigned short port;
     size_t window_size;
     struct kv *extra_fields;
