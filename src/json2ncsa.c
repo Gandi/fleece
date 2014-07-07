@@ -1,6 +1,21 @@
-/* poc for json to ncsa like
- *
- */
+/* for json to ncsa like part of fleece, to be incorporated
+
+   Copyright (C) 2014  Kilian Hart <eldre@gandi.net> <kilian@afturgurluk.org>
+
+   This program is free software; you can redistribute it and/or
+   modify it under the terms of the GNU General Public License
+   as published by the Free Software Foundation; either version 2
+   of the License, or (at your option) any later version.
+
+   This program is distributed in the hope that it will be useful,
+   but WITHOUT ANY WARRANTY; without even the implied warranty of
+   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+   GNU General Public License for more details.
+
+   You should have received a copy of the GNU General Public License
+   along with this program; if not, write to the Free Software
+   Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
+*/
 
 #include <stdio.h>
 
@@ -26,17 +41,12 @@
 #define DELAY 0
 #define DELAYS 1
 
+// max json input string
 #define STRMAXSZ 2048
+// max integer to string, from json input
 #define INTMAXSZ 16
 
-//char *colorder[] = {"host", "login", "user", "time", "request", "result", "size", NULL};
-// tous les champs ne sont pas à prendre, car la version json est plus détaillé que ncsa-like
-// il faut juste s'assurer de prendre le même ordre
-// aussi, comme on doit pouvoir gérer les logs d'erreurs, là il faudra que je gère
-// plusieurs champs à prendre, en fonction de 'environment', 'role', ou 'tags'
-// définition d'un champ 'noop' qui vaut '-', en ce moment c'est "role" que je prends pour user
-// bon pour la requête il me manque le type si c'est http/1.0,1.1 voir 0.9
-
+// type of output we want against fields
 typedef enum type_encaps {
     ENCAPS_BEGIN,
     ENCAPS_END,
@@ -45,15 +55,25 @@ typedef enum type_encaps {
     NOTHING,
 };
 
+// cosmetics we want for formatted output of fields
 #define COMBINED_JOIN ':'
 #define COMBINED_DEFAULT ' '
 #define ENCAPS_CHAR '"'
+
+// in case we don't get a required value in the json, we output this default string
 #define UNDEF_VAL "-"
 
+// fields struct rules
 struct entity {
     char *name;
     int attribut;
 };
+/* as some field have to be reconstructed, and encapsulated between ",
+ * i.e. ENCAPS_BEGIN rule will match until an ENCAPS_END, and will use the defined ENCAPS_CHAR
+ * but on contrary, ENCAPS_IT will just encapsulate just one field.
+ * Also, COMBINED is to be used to reflect the Apache log vhost_combined, it is the separator that
+ * is replaced with the previously defined COMBINED_JOIN so.
+ */
 struct entity entities[] = {
     { "vhost", COMBINED },
     { "clientip", NOTHING },
@@ -70,6 +90,7 @@ struct entity entities[] = {
     { NULL, NULL }
 };
 
+// return printed value, according to above rules
 int printformatted(char *out, size_t maxlen, int attribut, const char *value) {
     int writtenchars;
 
@@ -97,89 +118,100 @@ int printformatted(char *out, size_t maxlen, int attribut, const char *value) {
     return writtenchars;
 }
 
+// take one json and output an ncsa like line
 int trimjson(char *jsoninline) {
-  int idx, szwrite;
-  char *ptr, *value;
-  json_t *jsonevent, *jsondata;
-  json_error_t jsonerror;
-  char ncsaline[STRMAXSZ], intbuffer[INTMAXSZ];
+    int idx, szwrite, tmp;
+    char *ptr, *value;
+    json_t *jsonevent, *jsondata;
+    json_error_t jsonerror;
+    char ncsaline[STRMAXSZ], intbuffer[INTMAXSZ];
 
-  jsonevent = json_loads(jsoninline, 0, &jsonerror);
-  if (!jsonevent) {
-    fprintf(stderr, "aouch no json\n");
-    return 1;
-  }
+	// load the supposed json line
+    jsonevent = json_loads(jsoninline, 0, &jsonerror);
+    if (!jsonevent) {
+        fprintf(stderr, "aouch no json\n");
+        return 1;
+    }
 
-  if (!json_is_object(jsonevent)) {
-    fprintf(stderr, "not tha type: %08X\n", json_typeof(jsonevent));
-    free(jsonevent);
-    return 1;
-  }
+	// ensure we got a json object, not other type
+    if (!json_is_object(jsonevent)) {
+        fprintf(stderr, "not tha type: %08X\n", json_typeof(jsonevent));
+        free(jsonevent);
+        return 1;
+    }
 
-  idx = 0;
-  szwrite = 0;
-  ptr = ncsaline;
-  do {
-    jsondata = json_object_get(jsonevent, entities[idx].name);
-    if ( jsondata != NULL ) {
-        value = json_string_value(jsondata);
-        if ( value != NULL ) {
-            szwrite = printformatted(ptr, STRMAXSZ - 1 - (ptr - ncsaline), entities[idx].attribut, value);
-            free(value);
+	// iterate through the fields list contained in entities struct, in order
+    idx = 0;
+    szwrite = 0;
+    ptr = ncsaline;
+    do {
+        jsondata = json_object_get(jsonevent, entities[idx].name);
+        if ( jsondata != NULL ) {
+			// try to get a string value from json
+            value = json_string_value(jsondata);
+            if ( value != NULL ) {
+                szwrite = printformatted(ptr, STRMAXSZ - 1 - (ptr - ncsaline), entities[idx].attribut, value);
+                free(value);
+            } else {
+				// it is possible that it is instead an integer from json, so we get it
+				tmp = json_integer_value(jsondata);
+				// json_integer_value will return 0 in case it fails, but then, what should i do?
+				// 0 value could be a good value in some case in our logs
+                snprintf(intbuffer, INTMAXSZ - 1, "%d", tmp);
+                szwrite = printformatted(ptr, STRMAXSZ - 1 - (ptr - ncsaline), entities[idx].attribut, intbuffer);
+            }
+            ptr += szwrite;
+            free(jsondata);
         } else {
-			snprintf(intbuffer, INTMAXSZ - 1, "%d", json_integer_value(jsondata));
-            szwrite = printformatted(ptr, STRMAXSZ - 1 - (ptr - ncsaline), entities[idx].attribut, intbuffer);
+            szwrite = printformatted(ptr, STRMAXSZ - 1 - (ptr - ncsaline), entities[idx].attribut, UNDEF_VAL);
+            ptr += szwrite;
         }
-        ptr += szwrite;
-        free(jsondata);
-    } else {
-        szwrite = printformatted(ptr, STRMAXSZ - 1 - (ptr - ncsaline), entities[idx].attribut, UNDEF_VAL);
-        ptr += szwrite;
-    }
-  } while (entities[++idx].name != NULL);
-  free(jsonevent);
+    } while (entities[++idx].name != NULL);
+    free(jsonevent);
 
-  *ptr++ = '\n';
-  *ptr = 0;
-  fprintf(stdout, "%s", ncsaline);
+    *ptr++ = '\n';
+    *ptr = 0;
+    fprintf(stdout, "%s", ncsaline);
 
-  return 0;
+    return 0;
 }
 
+// test if data is in queue waiting to be read
 int inQueue(int fd) {
-  int fds;
-  fd_set read;
-  struct timeval tv={DELAYS, DELAY};
+    int fds;
+    fd_set read;
+    struct timeval tv={DELAYS, DELAY};
 
-  FD_ZERO(&read);
-  FD_SET(fd, &read);
-  fds=fd+1;
-  select(fds, &read, NULL, NULL, &tv);
-  if (FD_ISSET(fd, &read)) {
-    return 1;
-  }
-  return 0;
-}
-
-int main(int ac, char **av) {
-  int errorcond;
-  FILE *influx;
-  char buffer[STRMAXSZ];
-
-  // set explicit noblock on stdin
-  while ( 1 ) {
-    if (inQueue(fileno(stdin))) {
-      errorcond=fgets(buffer, STRMAXSZ, stdin);
-      if ( errorcond != NULL ) {
-    	if (trimjson(buffer)) {
-            fprintf(stdout, "bad json: %s\n", buffer);
-    	}
-      } else {
-        perror("fgets got:");
-        break;
-      }
+    FD_ZERO(&read);
+    FD_SET(fd, &read);
+    fds = fd+1;
+    select(fds, &read, NULL, NULL, &tv);
+    if (FD_ISSET(fd, &read)) {
+        return 1;
     }
-  }
+    return 0;
+}
+
+// loop on stdin, that will be removed, it is fleece core part job
+int main(int ac, char **av) {
+    int errorcond;
+    FILE *influx;
+    char buffer[STRMAXSZ];
+
+    while ( 1 ) {
+        if (inQueue(fileno(stdin))) {
+            errorcond=fgets(buffer, STRMAXSZ, stdin);
+            if ( errorcond != NULL ) {
+                if (trimjson(buffer)) {
+                    fprintf(stdout, "bad json: %s\n", buffer);
+                }
+            } else {
+                perror("fgets got:");
+                break;
+            }
+        }
+    }
 
   return 0;
 }
+
