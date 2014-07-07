@@ -17,6 +17,8 @@
    Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 */
 
+// see ligne 155, it won't compile with the gcc options of fleece, this will be fixed
+
 #include <stdio.h>
 
 // just for exit..
@@ -43,17 +45,17 @@
 
 // max json input string
 #define STRMAXSZ 2048
-// max integer to string, from json input
-#define INTMAXSZ 16
+// max integer (or long long) to string, from json input
+#define INTMAXSZ 32
 
 // type of output we want against fields
-typedef enum type_encaps {
+typedef enum {
     ENCAPS_BEGIN,
     ENCAPS_END,
     ENCAPS_IT,
     COMBINED,
     NOTHING,
-};
+} type_encaps;
 
 // cosmetics we want for formatted output of fields
 #define COMBINED_JOIN ':'
@@ -87,7 +89,7 @@ struct entity entities[] = {
     { "referer", ENCAPS_IT },
     { "useragent", ENCAPS_IT },
     { "duration", NOTHING },
-    { NULL, NULL }
+    { NULL, 0 }
 };
 
 // return printed value, according to above rules
@@ -120,7 +122,8 @@ int printformatted(char *out, size_t maxlen, int attribut, const char *value) {
 
 // take one json and output an ncsa like line
 int trimjson(char *jsoninline) {
-    int idx, szwrite, tmp;
+    int idx, szwrite;
+	long long tmp;
     char *ptr, *value;
     json_t *jsonevent, *jsondata;
     json_error_t jsonerror;
@@ -148,6 +151,8 @@ int trimjson(char *jsoninline) {
         jsondata = json_object_get(jsonevent, entities[idx].name);
         if ( jsondata != NULL ) {
 			// try to get a string value from json
+			// as the return of json_string_value is a const char, and that we don't have to free
+			// it, this call should not happen here
             value = json_string_value(jsondata);
             if ( value != NULL ) {
                 szwrite = printformatted(ptr, STRMAXSZ - 1 - (ptr - ncsaline), entities[idx].attribut, value);
@@ -157,11 +162,11 @@ int trimjson(char *jsoninline) {
 				tmp = json_integer_value(jsondata);
 				// json_integer_value will return 0 in case it fails, but then, what should i do?
 				// 0 value could be a good value in some case in our logs
-                snprintf(intbuffer, INTMAXSZ - 1, "%d", tmp);
+                snprintf(intbuffer, INTMAXSZ - 1, "%lld", tmp);
                 szwrite = printformatted(ptr, STRMAXSZ - 1 - (ptr - ncsaline), entities[idx].attribut, intbuffer);
             }
             ptr += szwrite;
-            free(jsondata);
+            //free(jsondata);
         } else {
             szwrite = printformatted(ptr, STRMAXSZ - 1 - (ptr - ncsaline), entities[idx].attribut, UNDEF_VAL);
             ptr += szwrite;
@@ -193,9 +198,8 @@ int inQueue(int fd) {
 }
 
 // loop on stdin, that will be removed, it is fleece core part job
-int main(int ac, char **av) {
-    int errorcond;
-    FILE *influx;
+int main(void) {
+    char *errorcond;
     char buffer[STRMAXSZ];
 
     while ( 1 ) {

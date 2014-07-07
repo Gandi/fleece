@@ -31,7 +31,10 @@ build: clean
 	$(CC) $(CFLAGS) -o fleece src/fleece.c src/str.c src/hostnameip.c
 
 clean:
-	rm -f fleece
+	rm -f fleece json2ncsa
+
+json2ncsa:
+	$(CC) $(CFLAGS) -o json2ncsa src/json2ncsa.c
 
 testjson:
 	@if [ -f fleece ]; \

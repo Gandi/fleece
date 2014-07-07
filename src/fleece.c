@@ -128,7 +128,8 @@ int main(int argc, char**argv)
             }
         } else {
             // TODO send the log to remote syslog, directly, and after that treat this as json
-            syslog(trim(sendline));
+            //syslog(trimjson(sendline)); // possibly better to call it after json has been validated below
+
             /* hey there's data let's process it */
             jsonevent = json_loads(sendline, 0, &jsonerror);
             if (jsonevent == NULL)
@@ -152,7 +153,7 @@ int main(int argc, char**argv)
              json_object_set_new(jsonevent, "host", json_string(myhostname));
 
              /* copy modified json string to sendline */
-             jsoneventstring = json_dumps(jsonevent,JSON_COMPACT);
+             jsoneventstring = json_dumps(jsonevent, JSON_COMPACT);
              if (jsoneventstring) {
                  sendto(sockfd, jsoneventstring, strlen(jsoneventstring), 0, \
                      (struct sockaddr *)&servaddr, sizeof(servaddr));
