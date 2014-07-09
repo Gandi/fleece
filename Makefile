@@ -1,6 +1,6 @@
 .PHONY : help build strip clean testjson testplain
 
-VERSION=0.1
+VERSION=0.2
 
 CFLAGS+=-D_POSIX_C_SOURCE=199309 -std=c99 -Wall -Wextra -Werror -pipe
 CFLAGS+=-g
@@ -24,15 +24,16 @@ help:
 	@echo "     clean  - cleans what has to be"
 	@echo "  testjson  - runs a test with a json file on localhost port 12345 udp"
 	@echo "  testplain - runs a test with a string on localhost port 12345 udp"
-	@echo " alone2ncsa - build a standalone version of json to ncsa like"
+	@echo "  testncsa  - runs a test with a json to ncsa on localhost syslog"
+	@echo "  json2ncsa - build a standalone version of json to ncsa like"
 	@echo "----------------------------------------------------------------------"
 	@echo "for tests : tcpdump -Xvelni lo port 12345"
 
 build: clean
-	$(CC) $(CFLAGS) -o fleece src/fleece.c src/str.c src/hostnameip.c
+	$(CC) $(CFLAGS) -o fleece src/fleece.c src/str.c src/hostnameip.c src/json2ncsa.c
 
 clean:
-	rm -f fleece json2ncsa
+	rm -f fleece
 
 testjson:
 	@if [ -f fleece ]; \
@@ -50,6 +51,14 @@ testplain:
 		@echo "fleece binary was not found. Did you build it ?";\
 	fi
 
-alone2ncsa:
+testncsa:
+	@if [ -f fleece ]; \
+	then \
+		cat json.log.clean | ./fleece --host 127.0.0.1 --port 12345 --field pouet=lala --field tutu=tata \
+	else \
+		@echo "fleece binary was not found. Did you build it ?";\
+	fi
+
+json2ncsa:
 	$(CC) $(CFLAGS) -DSTANDALONE -o json2ncsa src/json2ncsa.c
 

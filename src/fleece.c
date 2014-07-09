@@ -64,6 +64,7 @@ int main(int argc, char**argv)
     char ncsaline[LINE_MAXSZ];
 
     json_t *jsonevent;
+    // propose to make jsonerror global, we could then retreive the error of a sub function
     json_error_t jsonerror;
     char *jsoneventstring;
 
@@ -119,6 +120,7 @@ int main(int argc, char**argv)
         printf("fleece: sending jsonified stdin to %s:%i\n", flconf.host, flconf.port);
     }
 
+    // we could use the non blocking fgets function now (supported on sunos too?)
     while (fgets(sendline, flconf.window_size, stdin) != NULL)
     {
         if (strlen(sendline) == 0)
@@ -140,7 +142,7 @@ int main(int argc, char**argv)
                 jsonevent = json_object();
                 if (jsonevent == NULL)
                     continue;
-                json_object_set_new(jsonevent, "message", json_string(sendline) );
+                json_object_set_new(jsonevent, REJECTED_JSON, json_string(sendline) );
              }
 
              /* json parsed ok */
@@ -161,7 +163,9 @@ int main(int argc, char**argv)
                      (struct sockaddr *)&servaddr, sizeof(servaddr));
 
                  /* transform the json into a nearly classical ncsa */
-                 trimjson(jsoneventstring, ncsaline);
+                 jsonncsa(jsonevent, ncsaline);
+
+                 /* simple destination for log, with a prefix it will be easy to support syslog-ng */
                  syslog(syslog_priority, "%s", ncsaline);
 
                  /* free memory */

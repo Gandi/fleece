@@ -10,6 +10,8 @@
 /* syslog priority level */
 #define syslog_facility LOG_USER
 #define syslog_priority (LOG_USER|LOG_INFO)
+/* in case the json was rejected, content will be inside this name */
+#define REJECTED_JSON "message"
 
 typedef enum {
     opt_help = 'h',
