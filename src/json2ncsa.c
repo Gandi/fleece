@@ -111,7 +111,6 @@ int trimjson(json_t *jsonevent, char *ncsaline) {
                 szwrite = printformatted(ptr, LINE_MAXSZ - 1 - (ptr - ncsaline), entities[idx].attribut, intbuffer);
             }
             ptr += szwrite;
-            free(jsondata);
         } else {
             szwrite = printformatted(ptr, LINE_MAXSZ - 1 - (ptr - ncsaline), entities[idx].attribut, UNDEF_VAL);
             ptr += szwrite;
@@ -158,7 +157,7 @@ int main(void) {
                 }
                 trimjson(jsonevent, ncsaline);
                 fprintf(stdout, "%s\n", ncsaline);
-                free(jsonevent);
+				json_decref(jsonevent);
             } else {
                 perror("fgets got:");
                 break;

@@ -160,6 +160,7 @@ int main(int argc, char**argv)
                  sendto(sockfd, jsoneventstring, strlen(jsoneventstring), 0, \
                      (struct sockaddr *)&servaddr, sizeof(servaddr));
 
+                 /* transform the json into a nearly classical ncsa */
                  trimjson(jsoneventstring, ncsaline);
                  syslog(syslog_priority, "%s", ncsaline);
 
