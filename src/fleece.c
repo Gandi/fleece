@@ -43,10 +43,13 @@
 
 #include <jansson.h>
 
+#include <syslog.h>
+
 #include "str.h"
 #include "fleece.h"
 #include "hostnameip.h"
 #include "net.h"
+#include "json2ncsa.h"
 
 int main(int argc, char**argv)
 {
@@ -58,6 +61,7 @@ int main(int argc, char**argv)
 
     struct sockaddr_in servaddr;
     char sendline[LINE_MAXSZ];
+    char ncsaline[LINE_MAXSZ];
 
     json_t *jsonevent;
     json_error_t jsonerror;
@@ -79,7 +83,6 @@ int main(int argc, char**argv)
     };
 
     /* File descriptors for udp and stdin */
-    //TODO fgets_unlocked, no select
     fd_set fds;
     struct timeval tv;
 
@@ -103,9 +106,12 @@ int main(int argc, char**argv)
     servaddr.sin_addr.s_addr=inet_addr(flconf.ip);
     servaddr.sin_port=htons(flconf.port);
 
+    /* prepare syslogging */
+    openlog("fleece", LOG_NDELAY, syslog_facility);
+
     /* prepare select */
     FD_ZERO(&fds);
-    FD_SET(0, &fds); // should be 1 fo 0 !??
+    FD_SET(0, &fds);
 
     if (!flconf.quietmode)
     {
@@ -120,16 +126,12 @@ int main(int argc, char**argv)
             /* no data let's not burn cpu for nothing */
             tv.tv_sec = 1;
             tv.tv_usec = 0;
-            // TODO replace with the non blocking stdin
             retval = select(1, &fds, NULL, NULL, &tv);
             if ( retval == -1 )
             {
                 exit(0);
             }
         } else {
-            // TODO send the log to remote syslog, directly, and after that treat this as json
-            //syslog(trimjson(sendline)); // possibly better to call it after json has been validated below
-
             /* hey there's data let's process it */
             jsonevent = json_loads(sendline, 0, &jsonerror);
             if (jsonevent == NULL)
@@ -158,6 +160,9 @@ int main(int argc, char**argv)
                  sendto(sockfd, jsoneventstring, strlen(jsoneventstring), 0, \
                      (struct sockaddr *)&servaddr, sizeof(servaddr));
 
+                 trimjson(jsoneventstring, ncsaline);
+                 syslog(syslog_priority, "%s", ncsaline);
+
                  /* free memory */
                  free(jsoneventstring);
              }
@@ -165,5 +170,6 @@ int main(int argc, char**argv)
              json_decref(jsonevent);
         }
     } /* loop forever, reading from a file */
+    closelog();
     return 0;
 }

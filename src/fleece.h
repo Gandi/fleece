@@ -5,8 +5,11 @@
 #define HOSTNAME_MAXSZ 100
 // that is received line from apache
 #define LINE_MAXSZ 1024
-// it is ipv4 now(so ~16), but then..
+/* it is ipv4 now(so ~16), but we could got ipv6 and in case.. */
 #define IP_MAXSZ 100
+/* syslog priority level */
+#define syslog_facility LOG_USER
+#define syslog_priority (LOG_USER|LOG_INFO)
 
 typedef enum {
     opt_help = 'h',

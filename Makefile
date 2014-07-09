@@ -24,6 +24,7 @@ help:
 	@echo "     clean  - cleans what has to be"
 	@echo "  testjson  - runs a test with a json file on localhost port 12345 udp"
 	@echo "  testplain - runs a test with a string on localhost port 12345 udp"
+	@echo " alone2ncsa - build a standalone version of json to ncsa like"
 	@echo "----------------------------------------------------------------------"
 	@echo "for tests : tcpdump -Xvelni lo port 12345"
 
@@ -32,9 +33,6 @@ build: clean
 
 clean:
 	rm -f fleece json2ncsa
-
-json2ncsa:
-	$(CC) $(CFLAGS) -o json2ncsa src/json2ncsa.c
 
 testjson:
 	@if [ -f fleece ]; \
@@ -51,3 +49,7 @@ testplain:
 	else \
 		@echo "fleece binary was not found. Did you build it ?";\
 	fi
+
+alone2ncsa:
+	$(CC) $(CFLAGS) -DSTANDALONE -o json2ncsa src/json2ncsa.c
+
