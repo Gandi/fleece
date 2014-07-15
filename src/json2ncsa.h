@@ -32,7 +32,7 @@ typedef enum {
 #define BAD_JSON "wrong json:%s"
 #ifdef STANDALONE
 /* or with the following param name of fleece */
-#define REJECTED_JSON "message"
+#define REJECTED_JSON "nojson"
 #endif
 
 #include <jansson.h>

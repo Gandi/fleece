@@ -1,17 +1,17 @@
 #define BUFFERSIZE 16384
 #define FLEECE_VERSION "0.2"
 
-// a hostname could be greater than the 63 of original dns ?
+/* a hostname could be greater than the 63 of original dns ? counter possible bof */
 #define HOSTNAME_MAXSZ 100
-// that is received line from apache
+/* that is received line from apache */
 #define LINE_MAXSZ 1024
 /* it is ipv4 now(so ~16), but we could got ipv6 and in case.. */
 #define IP_MAXSZ 100
 /* syslog priority level */
 #define syslog_facility LOG_USER
 #define syslog_priority (LOG_USER|LOG_INFO)
-/* in case the json was rejected, content will be inside this name */
-#define REJECTED_JSON "message"
+/* in case the json was rejected, content will be inside this name, presently it is 'message' */
+#define REJECTED_JSON "nojson"
 
 typedef enum {
     opt_help = 'h',
@@ -21,6 +21,9 @@ typedef enum {
     opt_quiet,
     opt_port,
     opt_window_size,
+    opt_rsyslog,
+    opt_rsyslog_port,
+    opt_syslog
 } optlist_t;
 
 struct option_doc {
@@ -47,6 +50,9 @@ struct fleece_options {
     struct kv *extra_fields;
     size_t extra_fields_len;
     bool quietmode;
+    char *rsyslog;
+    unsigned short rsyslog_port;
+    bool syslog;
 };
 
 typedef struct fleece_options fleece_options_t;
@@ -64,6 +70,12 @@ static struct option_doc options[] = {
       "Disable outputs" },
     { "window_size", optional_argument, opt_window_size,
       "The window size" },
+    { "syslog-host", optional_argument, opt_rsyslog,
+      "The remote syslog that will receive ncsa" },
+    { "syslog-port", optional_argument, opt_rsyslog_port,
+      "The port used to send to the ncsa syslog" },
+    { "local-syslog", no_argument, opt_syslog,
+      "Log into the local syslog" },
     { NULL, 0, 0, NULL },
 };
 
@@ -148,8 +160,17 @@ void *configure_fleece_from_cli(fleece_options_t *flconf, struct option **getopt
           flconf->extra_fields[flconf->extra_fields_len - 1].value = strdup(tmp);
           flconf->extra_fields[flconf->extra_fields_len - 1].value_len = strlen(tmp);
           break;
+        case opt_rsyslog:
+          flconf->rsyslog = strdup(optarg);
+          break;
+        case opt_rsyslog_port:
+          flconf->rsyslog_port = (unsigned short)atoi(optarg);
+          break;
+        case opt_syslog:
+          flconf->syslog = true;
+          break;
         default:
-      printf("Not handled\n");
+          printf("Not handled\n");
           usage(flconf->argv[0]);
           return NULL;
       }
@@ -166,6 +187,14 @@ void *configure_fleece_from_cli(fleece_options_t *flconf, struct option **getopt
       printf("Missing --port flag\n");
       usage(flconf->argv[0]);
       return NULL;
+    }
+
+    if (flconf->rsyslog != NULL ) {
+        if (flconf->rsyslog_port == 0 ) {
+            printf("Missing --syslog-port flag\n");
+            usage(flconf->argv[0]);
+            return NULL;
+        }
     }
 
     flconf->argc -= optind;

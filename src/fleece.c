@@ -54,12 +54,12 @@
 int main(int argc, char**argv)
 {
     /* declarations and initialisations */
-    int sockfd, retval;
+    int sockfd, sockfdsyslog, retval;
     size_t j = 0;
 
     char myhostname[HOSTNAME_MAXSZ];
 
-    struct sockaddr_in servaddr;
+    struct sockaddr_in servaddr, servaddrsyslog;
     char sendline[LINE_MAXSZ];
     char ncsaline[LINE_MAXSZ];
 
@@ -80,6 +80,9 @@ int main(int argc, char**argv)
         (size_t)LINE_MAXSZ,
         NULL,
         (size_t)0,
+        false,
+        NULL,
+        0,
         false
     };
 
@@ -98,17 +101,30 @@ int main(int argc, char**argv)
     gethostname(myhostname, sizeof(myhostname));
     /* stdin */
     sockfd = socket(AF_INET,SOCK_DGRAM, 0);
+    /* to send to a remote syslog */
+    sockfdsyslog = socket(AF_INET,SOCK_DGRAM, 0);
     /* prepare info to send stuff */
-    bzero(&servaddr,sizeof(servaddr));
+    bzero(&servaddr, sizeof(servaddr));
     servaddr.sin_family = AF_INET;
 
     hostname_to_ip(flconf.host, flconf.ip);
 
-    servaddr.sin_addr.s_addr=inet_addr(flconf.ip);
-    servaddr.sin_port=htons(flconf.port);
+    servaddr.sin_addr.s_addr = inet_addr(flconf.ip);
+    servaddr.sin_port = htons(flconf.port);
 
     /* prepare syslogging */
-    openlog("fleece", LOG_NDELAY, syslog_facility);
+    if ( flconf.syslog == true ) {
+        openlog("fleece", LOG_NDELAY, syslog_facility);
+    }
+    /* or remote one */
+    if ( flconf.rsyslog != NULL ) {
+        bzero(&servaddrsyslog, sizeof(servaddrsyslog));
+        servaddrsyslog.sin_family = AF_INET;
+
+        hostname_to_ip(flconf.rsyslog, flconf.rsyslog);
+        servaddrsyslog.sin_addr.s_addr = inet_addr(flconf.rsyslog);
+        servaddrsyslog.sin_port = htons(flconf.rsyslog_port);
+    }
 
     /* prepare select */
     FD_ZERO(&fds);
@@ -120,7 +136,7 @@ int main(int argc, char**argv)
         printf("fleece: sending jsonified stdin to %s:%i\n", flconf.host, flconf.port);
     }
 
-    // we could use the non blocking fgets function now (supported on sunos too?)
+    // we could use the non blocking fgets function now (if, supported on sunos too?)
     while (fgets(sendline, flconf.window_size, stdin) != NULL)
     {
         if (strlen(sendline) == 0)
@@ -133,12 +149,14 @@ int main(int argc, char**argv)
             {
                 exit(0);
             }
-        } else {
+        }
+        else
+        {
             /* hey there's data let's process it */
             jsonevent = json_loads(sendline, 0, &jsonerror);
             if (jsonevent == NULL)
             {
-            /*json not parsed ok then push jsonified version of msg */
+                /*json not parsed ok then push jsonified version of msg */
                 jsonevent = json_object();
                 if (jsonevent == NULL)
                     continue;
@@ -148,8 +166,8 @@ int main(int argc, char**argv)
              /* json parsed ok */
              for ( j = 0; j < flconf.extra_fields_len; j++)
              {
-                 json_object_set_new(jsonevent, flconf.extra_fields[j].key, \
-                      json_string(flconf.extra_fields[j].value));
+                json_object_set_new(jsonevent, flconf.extra_fields[j].key, \
+                    json_string(flconf.extra_fields[j].value));
              }
 
              /* add mandatory fields */
@@ -160,21 +178,33 @@ int main(int argc, char**argv)
              jsoneventstring = json_dumps(jsonevent, JSON_COMPACT);
              if (jsoneventstring) {
                  sendto(sockfd, jsoneventstring, strlen(jsoneventstring), 0, \
-                     (struct sockaddr *)&servaddr, sizeof(servaddr));
+                    (struct sockaddr *)&servaddr, sizeof(servaddr));
 
                  /* transform the json into a nearly classical ncsa */
-                 jsonncsa(jsonevent, ncsaline);
+                if ( flconf.syslog == true || flconf.rsyslog != NULL ) {
+                    jsonncsa(jsonevent, ncsaline);
 
-                 /* simple destination for log, with a prefix it will be easy to support syslog-ng */
-                 syslog(syslog_priority, "%s", ncsaline);
+                    /* simple destination for log, recommend syslog-ng like then */
+                    if ( flconf.syslog == true ) {
+                        syslog(syslog_priority, "%s", ncsaline);
+                    }
 
-                 /* free memory */
-                 free(jsoneventstring);
-             }
-             json_object_clear(jsonevent);
-             json_decref(jsonevent);
+                    /* or send directly to an other remote syslog */
+                    if ( flconf.rsyslog != NULL ) {
+                        sendto(sockfdsyslog, ncsaline, strlen(ncsaline), 0, \
+                          (struct sockaddr *)&servaddrsyslog, sizeof(servaddrsyslog));
+                    }
+                }
+
+                /* free memory */
+                free(jsoneventstring);
+            }
+            json_object_clear(jsonevent);
+            json_decref(jsonevent);
         }
     } /* loop forever, reading from a file */
-    closelog();
+    if ( flconf.syslog == true ) {
+        closelog();
+    }
     return 0;
 }
