@@ -3,9 +3,10 @@
 VERSION=0.2
 
 CFLAGS+=-D_POSIX_C_SOURCE=199309 -std=c99 -Wall -Wextra -Werror -pipe
-CFLAGS+=-g
 CFLAGS+=-Wno-unused-function
 CFLAGS+=-ljansson
+CFLAGS+=-g
+
 LIBS=
 
 MAKE?=make
@@ -31,6 +32,10 @@ help:
 
 build: clean
 	$(CC) $(CFLAGS) -o fleece src/fleece.c src/str.c src/hostnameip.c src/json2ncsa.c
+
+strip:
+	strip -X fleece
+	strip -s fleece
 
 clean:
 	rm -f fleece
