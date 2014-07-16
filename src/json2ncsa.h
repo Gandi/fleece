@@ -30,10 +30,8 @@ typedef enum {
 
 /* in case the json is rejected, the input will be prefixed by this format */
 #define BAD_JSON "wrong json:%s"
-#ifdef STANDALONE
 /* or with the following param name of fleece */
 #define REJECTED_JSON "nojson"
-#endif
 
 #include <jansson.h>
 

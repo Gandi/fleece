@@ -122,17 +122,19 @@ int jsonncsa(json_t *jsonevent, char *ncsaline) {
 
     ptr = ncsaline;
     /* if we receive a rejected json, it will not have to be formatted, but directly sent */
-    jsondata = json_object_get(jsonevent, BAD_JSON);
+    jsondata = json_object_get(jsonevent, REJECTED_JSON);
     if ( jsondata != NULL ) {
         value = json_string_value(jsondata);
         if ( value != NULL ) {
             szwrite = snprintf(ptr, LINE_MAXSZ - 1, "%s", value);
             if ( szwrite < 0 ) {
+                ptr = 0;
                 return 1;
             }
         }
         /* we did get nothing?? so json could be just an int, really weird */
         fprintf(stderr, "received weird json this time\n");
+        ptr = 0;
         return 0;
     }
     /* iterate through the fields list contained in entities struct, in order */
@@ -158,12 +160,14 @@ int jsonncsa(json_t *jsonevent, char *ncsaline) {
               entities[idx].attribut, UNDEF_VAL);
         }
         if ( szwrite < 0 ) {
+            ptr = 0;
             break;
         }
         /* there we have a possible b0f, should ensure we really got that written, and not all
           we wanna (cf. 'Return value' of snprintf manpage), verify that */
         if ( ptr >= (ncsaline + (LINE_MAXSZ - 1)) ) {
             fprintf(stderr, "received a too long json\n");
+            *(ncsaline + LINE_MAXSZ) = 0;
             return 0;
         }
         ptr += szwrite;

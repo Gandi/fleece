@@ -101,8 +101,7 @@ int main(int argc, char**argv)
     gethostname(myhostname, sizeof(myhostname));
     /* stdin */
     sockfd = socket(AF_INET,SOCK_DGRAM, 0);
-    /* to send to a remote syslog */
-    sockfdsyslog = socket(AF_INET,SOCK_DGRAM, 0);
+
     /* prepare info to send stuff */
     bzero(&servaddr, sizeof(servaddr));
     servaddr.sin_family = AF_INET;
@@ -116,8 +115,10 @@ int main(int argc, char**argv)
     if ( flconf.syslog == true ) {
         openlog("fleece", LOG_NDELAY, syslog_facility);
     }
-    /* or remote one */
+    /* or to send to a remote syslog */
     if ( flconf.rsyslog != NULL ) {
+        sockfdsyslog = socket(AF_INET,SOCK_DGRAM, 0);
+
         bzero(&servaddrsyslog, sizeof(servaddrsyslog));
         servaddrsyslog.sin_family = AF_INET;
 
