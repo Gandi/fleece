@@ -132,10 +132,7 @@ int jsonncsa(json_t *jsonevent, char *ncsaline) {
                 return 1;
             }
         }
-        /* we did get nothing?? so json could be just an int, really weird */
-        fprintf(stderr, "received weird json this time\n");
-        ptr = 0;
-        return 0;
+        /* we did get nothing, so it is normal json! */
     }
     /* iterate through the fields list contained in entities struct, in order */
     idx = 0;
