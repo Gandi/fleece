@@ -1,6 +1,6 @@
 .PHONY : help build strip clean testjson testplain
 
-VERSION=0.2
+VERSION=0.3
 
 CFLAGS+=-D_POSIX_C_SOURCE=199309 -std=c99 -Wall -Wextra -Werror -pipe
 CFLAGS+=-Wno-unused-function
@@ -70,14 +70,14 @@ testj2n:
 	then \
 		lines=`wc -l json.log.bad` \
 		line=`cat json.log.bad | ./json2ncsa | wc -l` \
-		if [ $lines != $line ]; \
+		if [ $lines != $line ];\
 		then \
-			@echo "test failed."; \
-		else; \
-			@echo "test seems succeed."; \
+			@echo "test failed.";\
+		else \
+			@echo "test seems succeed.";\
 		fi; \
 	else \
-		@echo "you have to build the standalone json2ncsa for this test";\ 
+		@echo "you have to build the standalone json2ncsa for this test";\
 	fi
 
 json2ncsa:

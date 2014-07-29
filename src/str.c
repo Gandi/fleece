@@ -21,8 +21,12 @@ inline struct str *str_new(void) {
 } /* str */
 
 inline void str_free(struct str *str) {
-  free(str->data);
-  free(str);
+  if ( str->data != NULL ) {
+    free(str->data);
+  }
+  if ( str != NULL ) {
+    free(str);
+  }
 } /* str */
 
 inline void str_grow(struct str *str) {
