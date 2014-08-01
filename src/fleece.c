@@ -128,7 +128,7 @@ void *configure_fleece_from_cli(fleece_options_t *flconf, struct option **getopt
     while ( (c = getopt_long_only(flconf->argc, flconf->argv, "+hv", *getopt_options, &optindex)) != -1) {
       switch (c) {
         case opt_version:
-          printf("Fleece version %s\n",FLEECE_VERSION);
+          printf("Fleece version %s\n", FLEECE_VERSION);
           return 0;
         case opt_help:
           usage(flconf->argv[0]);
@@ -218,7 +218,7 @@ int main(int argc, char**argv)
     char ncsaline[LINE_MAXSZ];
 
     json_t *jsonevent;
-    // propose to make jsonerror global, we could then retreive the error of a sub function
+    /* propose to make jsonerror global, we could then retreive the error of a sub function */
     json_error_t jsonerror;
     char *jsoneventstring;
 
@@ -310,7 +310,7 @@ int main(int argc, char**argv)
         }
     }
 
-    // we could use the non blocking fgets function now (if, supported on sunos too?)
+    /* we could use the non blocking fgets function now (if, supported on sunos too?) */
     while (fgets(sendline, flconf.window_size, stdin) != NULL)
     {
         if (strlen(sendline) == 0)
@@ -391,7 +391,7 @@ end:
         closelog();
     }
 
-//XXX if we are not debugging, maybe let's not care about freeing resources before exit
+/* XXX if we are not debugging, maybe let's not care about freeing resources before exit */
 #ifdef DEBUG
     if (sockfdsyslog > 0) {
         close(sockfdsyslog);

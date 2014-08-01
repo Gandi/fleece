@@ -1,4 +1,10 @@
-fleece (0.3-9.1) unstable; urgency=medium
+fleece (0.3-11) unstable; urgency=medium
+
+  * fix several bugs and coding style issues
+
+ -- Nikita Kozlov <nikita@gandi.net>  Fri, 01 Aug 2014 15:45:59 +0200
+
+fleece (0.3-10) unstable; urgency=medium
 
   * add a transform for json to ncsa like and syslog possibility
 

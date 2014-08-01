@@ -2,7 +2,6 @@
 # define FLEECE_H__
 
 #define BUFFERSIZE 16384
-#define FLEECE_VERSION "0.3"
 
 /* a hostname could be greater than the 63 of original dns ? counter possible bof */
 #define HOSTNAME_MAXSZ 100

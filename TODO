@@ -1,2 +1,2 @@
 * Handle hostname with periodic refresh
-* remove sleep() and replace it with a select()
+* disc pmtu for selecting best buffersize for dgrams (see http://www.linux-ipv6.org/gitweb/gitweb.cgi?p=gitroot/iputils.git;a=blob;f=tracepath.c;h=be9023184976e37db18c4beffcaa4edf11028468;hb=HEAD )

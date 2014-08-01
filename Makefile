@@ -1,11 +1,11 @@
 .PHONY : help build strip clean testjson testplain
 
-VERSION=0.3
+VERSION="\"0.3\""
 
 CFLAGS+=-D_GNU_SOURCE -std=c99 -Wall -Wextra -Werror -pipe
 CFLAGS+=-Wno-unused-function
 CFLAGS+=-ljansson
-CFLAGS+=-O2
+CFLAGS+=-O2 -DFLEECE_VERSION=$(VERSION)
 CFLAGS_DEBUG+=-g -DDEBUG
 
 LIBS=
@@ -44,45 +44,25 @@ strip:
 clean:
 	rm -f fleece
 
-testjson:
-	@if [ -f fleece ]; \
-	then \
-		cat json.log.clean | ./fleece --host 127.0.0.1 --port 12345 --field pouet=lala --field tutu=tata \
-	else \
-		@echo "fleece binary was not found. Did you build it ?";\
-	fi
+testjson: fleece
+	cat json.log.clean | ./fleece --host 127.0.0.1 --port 12345 --field pouet=lala --field tutu=tata
 
 testncsa:
-	@if [ -f fleece ]; \
-	then \
-		cat json.log.clean | ./fleece --syslog-host 127.0.0.1 --syslog-port 12345 --field pouet=lala --field tutu=tata \
-	else \
-		@echo "fleece binary was not found. Did you build it ?";\
-	fi
+	cat json.log.clean | ./fleece --syslog-host 127.0.0.1 --syslog-port 12345 --field pouet=lala --field tutu=tata
 
 testboth:
-	@if [ -f fleece ]; \
-	then \
-		cat json.log.clean | ./fleece --host 127.0.0.1 --port 12345 --syslog-host 127.0.0.1 --syslog-port 12345 --field pouet=lala --field tutu=tata \
-	else \
-		@echo "fleece binary was not found. Did you build it ?";\
-	fi
+	cat json.log.clean | ./fleece --host 127.0.0.1 --port 12345 --syslog-host 127.0.0.1 --syslog-port 12345 --field pouet=lala --field tutu=tata
 
 
 testj2n:
-	@if [ -f json2ncsa ]; \
+	lines=`wc -l json.log.bad` \
+	line=`cat json.log.bad | ./json2ncsa | wc -l` \
+	if [ $lines != $line ];\
 	then \
-		lines=`wc -l json.log.bad` \
-		line=`cat json.log.bad | ./json2ncsa | wc -l` \
-		if [ $lines != $line ];\
-		then \
-			@echo "test failed.";\
-		else \
-			@echo "test seems succeed.";\
-		fi; \
+		@echo "test failed.";\
 	else \
-		@echo "you have to build the standalone json2ncsa for this test";\
-	fi
+		@echo "test seems succeed.";\
+	fi;
 
 json2ncsa:
 	$(CC) $(CFLAGS) -DSTANDALONE -o json2ncsa src/json2ncsa.c
