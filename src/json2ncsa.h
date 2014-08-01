@@ -27,6 +27,6 @@ typedef enum {
 /* in case we don't get a required value in the json, we output this default string, use "-" */
 #define UNDEF_VAL "undefined"
 
-int jsonncsa(json_t *jsonevent, char *ncsaline, int line_size);
+int jsonncsa(json_t * jsonevent, char *ncsaline, int line_size);
 
 #endif

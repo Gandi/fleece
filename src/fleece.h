@@ -1,5 +1,5 @@
 #ifndef FLEECE_H__
-# define FLEECE_H__
+#define FLEECE_H__
 
 #define BUFFERSIZE 16384
 
@@ -17,8 +17,8 @@
 
 struct option_doc {
     const char *name;
-    int         has_arg;
-    int         val;
+    int has_arg;
+    int val;
     const char *documentation;
 };
 
@@ -27,7 +27,7 @@ struct kv {
     size_t key_len;
     char *value;
     size_t value_len;
-}; /* struct kv */
+};				/* struct kv */
 
 struct fleece_options {
     int argc;
