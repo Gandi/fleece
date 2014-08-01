@@ -1,14 +1,16 @@
-#include "stdio.h"
+#include <sys/types.h>
 #include <sys/socket.h>
+#include <netdb.h>
 #include <stdlib.h>
 #include <string.h>
-#include <sys/socket.h>
+#include <stdio.h>
 #include <netinet/in.h>
 #include <arpa/inet.h>
-#include "hostnameip.h"
-#include "net.h"
 
-int hostname_to_ip(char *hostname, char *ip)
+
+#include "hostnameip.h"
+
+int hostname_to_ip(char *hostname, char *ip, int ip_len)
 {
     struct addrinfo hints, *servinfo, *p;
     struct sockaddr_in *h;
@@ -24,11 +26,12 @@ int hostname_to_ip(char *hostname, char *ip)
         return 1;
     }
 
+    //FIXME bad address selection
     // loop through all the results and connect to the first we can
     for(p = servinfo; p != NULL; p = p->ai_next)
     {
         h = (struct sockaddr_in *) p->ai_addr;
-        strcpy(ip , inet_ntoa( h->sin_addr ) );
+        strncpy(ip, inet_ntoa( h->sin_addr ), ip_len);
     }
 
     freeaddrinfo(servinfo); // all done with this structure

@@ -31,6 +31,7 @@
 #include <netinet/in.h>
 #include <arpa/inet.h>
 
+#include <errno.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <stdbool.h>
@@ -45,16 +46,169 @@
 
 #include <syslog.h>
 
-#include "str.h"
 #include "fleece.h"
 #include "hostnameip.h"
-#include "net.h"
 #include "json2ncsa.h"
+
+typedef enum {
+    opt_help = 'h',
+    opt_version = 'v',
+    opt_field,
+    opt_host,
+    opt_quiet,
+    opt_port,
+    opt_window_size,
+    opt_rsyslog,
+    opt_rsyslog_port,
+    opt_syslog
+} optlist_t;
+
+
+static struct option_doc options[] = {
+    { "help", no_argument, opt_help, "show this help" },
+    { "version", no_argument, opt_version, "show the version of fleece" },
+    { "field", required_argument, opt_field,
+      "Add a custom key-value mapping to every line emitted" },
+    { "host", required_argument, opt_host,
+      "The hostname to send udp messages to" },
+    { "port", required_argument, opt_port,
+      "The port to connect on the udp server" },
+    { "quiet", no_argument, opt_quiet,
+      "Disable outputs" },
+    { "window_size", required_argument, opt_window_size,
+      "The window size" },
+    { "syslog-host", required_argument, opt_rsyslog,
+      "The remote syslog that will receive ncsa" },
+    { "syslog-port", required_argument, opt_rsyslog_port,
+      "The port used to send to the ncsa syslog" },
+    { "local-syslog", no_argument, opt_syslog,
+      "Log into the local syslog" },
+    { NULL, 0, 0, NULL },
+};
+
+void usage(const char *prog) {
+    printf("Usage: %s [options]]\n", prog);
+
+    for (int i = 0; options[i].name != NULL; i++) {
+        printf("  --%s%s %.*s %s\n", options[i].name,
+            options[i].has_arg ? " VALUE" : "",
+            (int)(20 - strlen(options[i].name) - (options[i].has_arg ? 6 : 0)),
+            "                                   ",
+            options[i].documentation);
+    }
+} /* usage */
+
+struct option *build_getopt_options() {
+    /* variables */
+    int i;
+    struct option *getopt_options = NULL;
+
+    /* convert the 'option_doc' array into a 'struct option' array
+     * for use with getopot_long_only */
+    for (i = 0; options[i].name != NULL; i++) {
+        getopt_options = realloc(getopt_options, (i+1) * sizeof(struct option));
+        getopt_options[i].name = options[i].name;
+        getopt_options[i].has_arg = options[i].has_arg;
+        getopt_options[i].flag = NULL;
+        getopt_options[i].val = options[i].val;
+    }
+    /* Add one last item for the list terminator NULL */
+    getopt_options = realloc(getopt_options, (i+1) * sizeof(struct option));
+    getopt_options[i].name = NULL;
+
+    return getopt_options;
+} /* build_getopt_options */
+
+
+void *configure_fleece_from_cli(fleece_options_t *flconf, struct option **getopt_options) {
+    int c;
+    int optindex = 0;
+    char *tmp;
+
+    while ( (c = getopt_long_only(flconf->argc, flconf->argv, "+hv", *getopt_options, &optindex)) != -1) {
+      switch (c) {
+        case opt_version:
+          printf("Fleece version %s\n",FLEECE_VERSION);
+          return 0;
+        case opt_help:
+          usage(flconf->argv[0]);
+          return 0;
+        case opt_host:
+          flconf->host = strdup(optarg);
+          break;
+        case opt_port:
+          flconf->port = (unsigned short)atoi(optarg);
+          break;
+        case opt_window_size:
+          flconf->window_size = (size_t)atoi(optarg);
+          break;
+        case opt_quiet:
+          flconf->quietmode = true;
+          break;
+        case opt_field:
+          tmp = strchr(optarg, '=');
+          if (tmp == NULL) {
+            printf("Invalid --field : expected 'foo=bar' form " \
+                   "didn't find '=' in '%s'", optarg);
+            usage(flconf->argv[0]);
+            exit(1);
+          }
+          flconf->extra_fields_len += 1;
+          flconf->extra_fields = realloc(flconf->extra_fields,
+                                 flconf->extra_fields_len * sizeof(struct kv));
+          *tmp = '\0'; /* turn '=' into null terminator */
+          tmp++; /* skip to first char of value */
+          flconf->extra_fields[flconf->extra_fields_len - 1].key = strdup(optarg);
+          flconf->extra_fields[flconf->extra_fields_len - 1].key_len = strlen(optarg);
+          flconf->extra_fields[flconf->extra_fields_len - 1].value = strdup(tmp);
+          flconf->extra_fields[flconf->extra_fields_len - 1].value_len = strlen(tmp);
+          break;
+        case opt_rsyslog:
+          flconf->rsyslog = strdup(optarg);
+          break;
+        case opt_rsyslog_port:
+          flconf->rsyslog_port = (unsigned short)atoi(optarg);
+          break;
+        case opt_syslog:
+          flconf->syslog = true;
+          break;
+        default:
+          printf("Not handled\n");
+          usage(flconf->argv[0]);
+          return NULL;
+      }
+    }
+    free(*getopt_options);
+
+    if (flconf->host == NULL && flconf->rsyslog == NULL) {
+        printf("Missing --host or --syslog flag\n");
+        usage(flconf->argv[0]);
+        return NULL;
+    }
+
+    if (flconf->host && flconf->port == 0) {
+        printf("Missing --port flag\n");
+        usage(flconf->argv[0]);
+        return NULL;
+    }
+
+    if (flconf->rsyslog && flconf->rsyslog_port == 0 ) {
+        printf("Missing --syslog-port flag\n");
+        usage(flconf->argv[0]);
+        return NULL;
+    }
+
+    flconf->argc -= optind;
+    flconf->argv += optind;
+
+    return flconf;
+}
+
 
 int main(int argc, char**argv)
 {
     /* declarations and initialisations */
-    int sockfd, sockfdsyslog, retval;
+    int sockfd = 0, sockfdsyslog = 0, retval = 0;
     size_t j = 0;
 
     char myhostname[HOSTNAME_MAXSZ];
@@ -94,36 +248,50 @@ int main(int argc, char**argv)
      * for use with getopt_long_only */
     getopt_options = build_getopt_options();
     if (configure_fleece_from_cli(&flconf, &getopt_options) == NULL) {
-        exit(1);
+        retval = 1;
+        goto end;
     }
 
     /* who am i */
     gethostname(myhostname, sizeof(myhostname));
-    /* stdin */
-    sockfd = socket(AF_INET,SOCK_DGRAM, 0);
 
-    /* prepare info to send stuff */
-    bzero(&servaddr, sizeof(servaddr));
-    servaddr.sin_family = AF_INET;
+    /* send to a remote json reader */
+    if ( flconf.host != NULL ) {
+        sockfd = socket(AF_INET,SOCK_DGRAM, 17);
 
-    hostname_to_ip(flconf.host, flconf.ip);
+        if (sockfd < 0) {
+            fprintf(stderr, "failed to open sock: %s\n", strerror(errno));
+            retval = 1;
+            goto end;
+        }
+        bzero(&servaddr, sizeof(servaddr));
+        servaddr.sin_family = AF_INET;
 
-    servaddr.sin_addr.s_addr = inet_addr(flconf.ip);
-    servaddr.sin_port = htons(flconf.port);
+        hostname_to_ip(flconf.host, flconf.ip, sizeof(flconf.ip));
+        servaddr.sin_addr.s_addr = inet_addr(flconf.ip);
+        servaddr.sin_port = htons(flconf.port);
+    }
 
     /* prepare syslogging */
     if ( flconf.syslog == true ) {
         openlog("fleece", LOG_NDELAY, syslog_facility);
     }
-    /* or to send to a remote syslog */
+    /* send to a remote syslog */
     if ( flconf.rsyslog != NULL ) {
-        sockfdsyslog = socket(AF_INET,SOCK_DGRAM, 0);
+        char rsyslog_ip[IP_MAXSZ];
 
+        sockfdsyslog = socket(AF_INET,SOCK_DGRAM, 17);
+
+        if (sockfdsyslog < 0) {
+            fprintf(stderr, "failed to open sock: %s\n", strerror(errno));
+            retval = 1;
+            goto end;
+        }
         bzero(&servaddrsyslog, sizeof(servaddrsyslog));
         servaddrsyslog.sin_family = AF_INET;
 
-        hostname_to_ip(flconf.rsyslog, flconf.rsyslog);
-        servaddrsyslog.sin_addr.s_addr = inet_addr(flconf.rsyslog);
+        hostname_to_ip(flconf.rsyslog, rsyslog_ip, sizeof(rsyslog_ip));
+        servaddrsyslog.sin_addr.s_addr = inet_addr(rsyslog_ip);
         servaddrsyslog.sin_port = htons(flconf.rsyslog_port);
     }
 
@@ -133,8 +301,13 @@ int main(int argc, char**argv)
 
     if (!flconf.quietmode)
     {
-        printf("%s has ip %s\n", flconf.host, flconf.ip);
-        printf("fleece: sending jsonified stdin to %s:%i\n", flconf.host, flconf.port);
+        if ( flconf.host ) {
+            printf("%s has ip %s\n", flconf.host, flconf.ip);
+            printf("fleece: sending jsonified stdin to %s:%i\n", flconf.host, flconf.port);
+        }
+        if ( flconf.rsyslog ) {
+            printf("fleece: sending ncsaified stdin to %s:%i\n", flconf.rsyslog, flconf.rsyslog_port);
+        }
     }
 
     // we could use the non blocking fgets function now (if, supported on sunos too?)
@@ -146,9 +319,9 @@ int main(int argc, char**argv)
             tv.tv_sec = 1;
             tv.tv_usec = 0;
             retval = select(1, &fds, NULL, NULL, &tv);
-            if ( retval == -1 )
+            if ( retval == -1 && errno != EAGAIN )
             {
-                exit(0);
+                goto end;
             }
         }
         else
@@ -178,22 +351,30 @@ int main(int argc, char**argv)
              /* copy modified json string to sendline */
              jsoneventstring = json_dumps(jsonevent, JSON_COMPACT);
              if (jsoneventstring) {
-                 sendto(sockfd, jsoneventstring, strlen(jsoneventstring), 0, \
-                    (struct sockaddr *)&servaddr, sizeof(servaddr));
+                 if ( sockfd ) {
+                     sendto(sockfd, jsoneventstring, strlen(jsoneventstring), 0, \
+                             (struct sockaddr *)&servaddr, sizeof(servaddr));
+                 }
 
                  /* transform the json into a nearly classical ncsa */
-                if ( flconf.syslog == true || flconf.rsyslog != NULL ) {
-                    jsonncsa(jsonevent, ncsaline);
+                if ( flconf.syslog == true || sockfdsyslog ) {
+                    retval = jsonncsa(jsonevent, ncsaline, LINE_MAXSZ);
 
-                    /* simple destination for log, recommend syslog-ng like then */
-                    if ( flconf.syslog == true ) {
-                        syslog(syslog_priority, "%s", ncsaline);
-                    }
+                    if (retval) {
+                        if (!flconf.quietmode) {
+                            fprintf(stderr, "jsonncsa failed with status %d\n", retval);
+                        }
+                    } else {
+                        /* simple destination for log, recommend syslog-ng like then */
+                        if ( flconf.syslog == true ) {
+                            syslog(syslog_priority, "%s", ncsaline);
+                        }
 
-                    /* or send directly to an other remote syslog */
-                    if ( flconf.rsyslog != NULL ) {
-                        sendto(sockfdsyslog, ncsaline, strlen(ncsaline), 0, \
-                          (struct sockaddr *)&servaddrsyslog, sizeof(servaddrsyslog));
+                        /* or send directly to an other remote syslog */
+                        if ( sockfdsyslog ) {
+                            sendto(sockfdsyslog, ncsaline, strlen(ncsaline), 0, \
+                                    (struct sockaddr *)&servaddrsyslog, sizeof(servaddrsyslog));
+                        }
                     }
                 }
 
@@ -204,8 +385,32 @@ int main(int argc, char**argv)
             json_decref(jsonevent);
         }
     } /* loop forever, reading from a file */
+
+end:
     if ( flconf.syslog == true ) {
         closelog();
     }
-    return 0;
+
+//XXX if we are not debugging, maybe let's not care about freeing resources before exit
+#ifdef DEBUG
+    if (sockfdsyslog > 0) {
+        close(sockfdsyslog);
+    }
+
+    if (sockfd > 0) {
+        close(sockfd);
+    }
+
+    free(flconf.rsyslog);
+    free(flconf.host);
+
+    for ( j = 0; j < flconf.extra_fields_len; ++j ) {
+        free(flconf.extra_fields[j].value);
+        free(flconf.extra_fields[j].key);
+    }
+
+    free(flconf.extra_fields);
+#endif
+
+    return retval;
 }

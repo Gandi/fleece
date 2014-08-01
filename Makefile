@@ -2,18 +2,16 @@
 
 VERSION=0.3
 
-CFLAGS+=-D_POSIX_C_SOURCE=199309 -std=c99 -Wall -Wextra -Werror -pipe
+CFLAGS+=-D_GNU_SOURCE -std=c99 -Wall -Wextra -Werror -pipe
 CFLAGS+=-Wno-unused-function
 CFLAGS+=-ljansson
-CFLAGS+=-g
+CFLAGS+=-O2
+CFLAGS_DEBUG+=-g -DDEBUG
 
 LIBS=
 
 MAKE?=make
 CC=gcc
-
-CFLAGS+=-Iinclude
-LDFLAGS+=-Llib
 
 default: build
 
@@ -21,18 +19,23 @@ help:
 	@echo "----------------------------------------------------------------------"
 	@echo "This Makefile handles the following targets:"
 	@echo "     build  - builds fleece"
+	@echo "build_debug - builds fleece with debug cflags"
 	@echo "     strip  - strips the fleece binary"
 	@echo "     clean  - cleans what has to be"
 	@echo "  testjson  - runs a test with a json file on localhost port 12345 udp"
-	@echo "  testplain - runs a test with a string on localhost port 12345 udp"
 	@echo "  testncsa  - runs a test with a json to ncsa on localhost syslog"
+	@echo "  testboth  - runs a both previous tests on localhoast port 12345"
 	@echo "  testj2n   - runs a test with a bad json to ncsa"
 	@echo "  json2ncsa - build a standalone version of json to ncsa like"
 	@echo "----------------------------------------------------------------------"
 	@echo "for tests : tcpdump -Xvelni lo port 12345"
+	@echo "and (or)  : nc -u -l -s 127.0.0.1 -p 12345"
 
 build: clean
-	$(CC) $(CFLAGS) -o fleece src/fleece.c src/str.c src/hostnameip.c src/json2ncsa.c
+	$(CC) $(CFLAGS) -o fleece src/fleece.c src/hostnameip.c src/json2ncsa.c
+
+build_debug: clean
+	$(CC) $(CFLAGS) $(CFLAGS_DEBUG) -o fleece src/fleece.c src/hostnameip.c src/json2ncsa.c
 
 strip:
 	strip -X fleece
@@ -49,21 +52,22 @@ testjson:
 		@echo "fleece binary was not found. Did you build it ?";\
 	fi
 
-testplain:
+testncsa:
 	@if [ -f fleece ]; \
 	then \
-		echo "pouetpouet" | ./fleece --host 127.0.0.1 --port 12345 --field pouet=lala --field tutu=tata \
+		cat json.log.clean | ./fleece --syslog-host 127.0.0.1 --syslog-port 12345 --field pouet=lala --field tutu=tata \
 	else \
 		@echo "fleece binary was not found. Did you build it ?";\
 	fi
 
-testncsa:
+testboth:
 	@if [ -f fleece ]; \
 	then \
-		cat json.log.clean | ./fleece --host 127.0.0.1 --port 12345 --field pouet=lala --field tutu=tata \
+		cat json.log.clean | ./fleece --host 127.0.0.1 --port 12345 --syslog-host 127.0.0.1 --syslog-port 12345 --field pouet=lala --field tutu=tata \
 	else \
 		@echo "fleece binary was not found. Did you build it ?";\
 	fi
+
 
 testj2n:
 	@if [ -f json2ncsa ]; \

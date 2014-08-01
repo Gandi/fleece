@@ -1,7 +1,6 @@
-#ifndef LINE_MAXSZ
-/* max json input string */
-#define LINE_MAXSZ 2048
-#endif
+#ifndef JSONNCSA_H__
+#define JSONNCSA_H__
+
 /* max integer (or long long) to string, expected from json input */
 #define INTMAXSZ 32
 
@@ -28,13 +27,6 @@ typedef enum {
 /* in case we don't get a required value in the json, we output this default string, use "-" */
 #define UNDEF_VAL "uNdeFiNeD"
 
-/* in case the json is rejected, the input will be prefixed by this format */
-#define BAD_JSON "wrong json:%s"
-/* or with the following param name of fleece */
-#define REJECTED_JSON "nojson"
+int jsonncsa(json_t *jsonevent, char *ncsaline, int line_size);
 
-#include <jansson.h>
-
-extern int printformatted(char *out, size_t maxlen, int attribut, const char *value);
-extern int jsonncsa(json_t *jsonevent, char *ncsaline);
-
+#endif
