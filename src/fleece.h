@@ -27,7 +27,7 @@ struct kv {
     size_t key_len;
     char *value;
     size_t value_len;
-};				/* struct kv */
+};                              /* struct kv */
 
 struct fleece_options {
     int argc;

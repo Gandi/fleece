@@ -47,23 +47,15 @@ clean:
 testjson: fleece
 	cat json.log.clean | ./fleece --host 127.0.0.1 --port 12345 --field pouet=lala --field tutu=tata
 
-testncsa:
+testncsa: fleece
 	cat json.log.clean | ./fleece --syslog-host 127.0.0.1 --syslog-port 12345 --field pouet=lala --field tutu=tata
 
-testboth:
+testboth: fleece
 	cat json.log.clean | ./fleece --host 127.0.0.1 --port 12345 --syslog-host 127.0.0.1 --syslog-port 12345 --field pouet=lala --field tutu=tata
 
+testj2n: fleece
+	cat json.log.bad | ./fleece --host 127.0.0.1 --port 12345 --syslog-host 127.0.0.1 --syslog-port 12345 --field pouet=lala --field tutu=tata
 
-testj2n:
-	lines=`wc -l json.log.bad` \
-	line=`cat json.log.bad | ./json2ncsa | wc -l` \
-	if [ $lines != $line ];\
-	then \
-		@echo "test failed.";\
-	else \
-		@echo "test seems succeed.";\
-	fi;
-
-json2ncsa:
+json2ncsa: json2ncsa
 	$(CC) $(CFLAGS) -DSTANDALONE -o json2ncsa src/json2ncsa.c
 

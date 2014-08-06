@@ -8,7 +8,7 @@ fleece (0.3-10) unstable; urgency=medium
 
   * add a transform for json to ncsa like and syslog possibility
 
- -- eldre <eldre@lethi.gandi.net>  Tue, 15 Jul 2014 23:25:59 +0200
+ -- eldre <eldre@gandi.net>  Tue, 15 Jul 2014 23:25:59 +0200
 
 fleece (0.3-9) unstable; urgency=low
 
