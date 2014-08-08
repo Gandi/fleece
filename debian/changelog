@@ -1,15 +1,73 @@
-fleece (0.2-1) unstable; urgency=low
+fleece (0.3-11) unstable; urgency=medium
 
-  * Fix int conversion.
-  * Handle empty fields option
-  * Fix long parameters
-  * Fix wrong fields decode() function call
-  * Bump version
+  * fix several bugs and coding style issues
 
- -- beorn <beorn@gandi.net>  Wed, 18 Sep 2013 01:03:12 +0200
+ -- Nikita Kozlov <nikita@gandi.net>  Fri, 01 Aug 2014 15:45:59 +0200
+
+fleece (0.3-10) unstable; urgency=medium
+
+  * add a transform for json to ncsa like and syslog possibility
+
+ -- eldre <eldre@gandi.net>  Tue, 15 Jul 2014 23:25:59 +0200
+
+fleece (0.3-9) unstable; urgency=low
+
+  * Fix leak when converting to json plain text input
+
+ -- Aurelien Rougemont <beorn@gandi.net>  Wed, 18 Dec 2013 14:45:43 +0100
+
+fleece (0.3-8) unstable; urgency=low
+
+  * Fix general protection seen in webmail json logging.
+
+ -- Nicolas Chipaux <aegiap@gandi.net>  Wed, 18 Dec 2013 11:05:43 +0100
+
+fleece (0.3-7) unstable; urgency=low
+
+  *  Fix memory leak ( use *_new functions for oneshot use ) 
+
+ -- beorn <beorn@thrain.gandi.net>  Wed, 16 Oct 2013 11:44:05 +0200
+
+fleece (0.3-6) unstable; urgency=low
+
+  * Fix memory leak in json_load//free 
+
+ -- beorn <beorn@thrain.gandi.net>  Wed, 16 Oct 2013 10:23:24 +0200
+
+fleece (0.3-5) unstable; urgency=low
+
+  * Fixes for good the replacement of sleep() with select() 
+
+ -- beorn <beorn@thrain.gandi.net>  Tue, 08 Oct 2013 22:44:30 +0200
+
+fleece (0.3-4) unstable; urgency=low
+
+  * revert 14222c64e79987ed26ff35df419536cb1662eca8 (sleep() => select())
+
+ -- beorn <beorn@thrain.gandi.net>  Mon, 07 Oct 2013 14:42:04 +0200
+
+fleece (0.3-3) unstable; urgency=low
+
+  * Add quiet mode
+  * Add fqdn resolution to ip
+  * Remove ugly sleep() and now use select() with timeout
+
+ -- beorn <beorn@thrain.gandi.net>  Mon, 07 Oct 2013 11:09:56 +0200
+
+fleece (0.3-2) unstable; urgency=low
+
+  * Fix the json extra values disappearing bug
+
+ -- beorn <beorn@thrain.gandi.net>  Thu, 03 Oct 2013 16:34:53 +0200
+
+fleece (0.3-1) unstable; urgency=low
+
+  * New version as the C code version replace the python code.
+
+ -- Nicolas Chipaux <aegiap@gandi.net>  Thu, 03 Oct 2013 15:40:20 +0200
 
 fleece (0.1-1) unstable; urgency=low
 
-  * Initial release. (version v.0.1)
+  * Initial release.
 
- -- beorn <beorn@gandi.net>  Tue, 17 Sep 2013 18:06:54 +0200
+ -- beorn <beorn@gandi.net>  Thu, 03 Oct 2013 14:52:46 +0200

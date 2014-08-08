@@ -1,5 +1,8 @@
-Upstream Author: Gandi SAS
+Upstream Author: Aurelien Rougemont (Gandi)
 
 Files: *
-Copyright: 2013 Gandi SAS
-License: proprietary
+Copyright: Aurelien Rougemont
+License: GPL-2
+
+Licence: GPL-2
+  See /usr/share/common-licenses/GPL-2

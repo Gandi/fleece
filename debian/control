@@ -1,14 +1,15 @@
 Source: fleece
-Section: python
+Section: admin
 Priority: optional
 Maintainer: Aurelien ROUGEMONT <beorn@gandi.net>
-Build-Depends: debhelper (>= 8), python (>= 2.6)
+Build-Depends: debhelper (>= 8), libjansson-dev, libjemalloc-dev
 Build-Depends-Indep: python-setuptools
 Standards-Version: 3.9.1
-X-Python-Version: >= 2.6
+#Vcs-Git: ssh://git.gandi.net/srv/git/gandi/fleece.git
+Vcs-Browser: http://git.gandi.net/?p=fleece.git;a=tree;h=refs/heads/C99;hb=C99
 
 Package: fleece
-Architecture: all
-Depends: python (>= 2.6), ${python:Depends}
-Description: Simple udp jsonifier from stdin.
+Architecture: any
+Depends: libjansson4, libjemalloc1, ${shlibs:Depends}
+Description: simple udp jsonifier from stdin.
  Simple udp jsonifier from stdin. Meant for piping apache logs.

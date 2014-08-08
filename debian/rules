@@ -1,5 +1,7 @@
 #!/usr/bin/make -f
-# -*- makefile -*-
+
+# Uncomment to enable verbose mode.
+#export DH_VERBOSE=1
 
 %:
-	dh $@ --with python2
+	dh $@
