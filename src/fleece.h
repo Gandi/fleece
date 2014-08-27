@@ -10,8 +10,8 @@
 /* it is ipv4 now(so ~16), but we could got ipv6 and in case.. */
 #define IP_MAXSZ 100
 /* syslog priority level */
-#define syslog_facility LOG_USER
-#define syslog_priority (LOG_USER|LOG_INFO)
+#define syslog_facility LOG_LOCAL7
+#define syslog_priority (LOG_LOCAL7|LOG_INFO)
 /* in case the json was rejected, content will be inside this name, presently it is 'message' */
 #define REJECTED_JSON "nojson"
 
