@@ -1,3 +1,9 @@
+fleece (0.3-12) unstable; urgency=medium
+
+  * changed syslog level to local7
+
+ -- eldre <eldre@gandi.net>  Fri, 29 Aug 2014 15:27:13 +0200
+
 fleece (0.3-11) unstable; urgency=medium
 
   * fix several bugs and coding style issues
