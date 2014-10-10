@@ -197,7 +197,6 @@ json_t *readjson(const char *jsoninline)
     /* load the supposed json line */
     jsonevent = json_loads(jsoninline, 0, &jsonerror);
     if (!jsonevent) {
-        fprintf(stderr, "this is no json\n");
         return NULL;
     }
 

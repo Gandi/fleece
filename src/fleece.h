@@ -6,7 +6,7 @@
 /* a hostname could be greater than the 63 of original dns ? counter possible bof */
 #define HOSTNAME_MAXSZ 100
 /* that is received line from apache */
-#define LINE_MAXSZ 1024
+#define LINE_MAXSZ 2048
 /* it is ipv4 now(so ~16), but we could got ipv6 and in case.. */
 #define IP_MAXSZ 100
 /* syslog priority level */

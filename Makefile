@@ -56,6 +56,6 @@ testboth: fleece
 testj2n: fleece
 	cat json.log.bad | ./fleece --host 127.0.0.1 --port 12345 --syslog-host 127.0.0.1 --syslog-port 12345 --field pouet=lala --field tutu=tata
 
-json2ncsa: json2ncsa
+json2ncsa: clean
 	$(CC) $(CFLAGS) -DSTANDALONE -o json2ncsa src/json2ncsa.c
 
