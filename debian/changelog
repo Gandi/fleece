@@ -1,3 +1,9 @@
+fleece (0.3-13) unstable; urgency=medium
+
+  * set json input size to 2048
+
+ -- eldre <eldre@gandi.net>  Tue, 21 Oct 2014 15:30:49 +0200
+
 fleece (0.3-12) unstable; urgency=medium
 
   * changed syslog level to local7
