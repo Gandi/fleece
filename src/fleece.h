@@ -13,7 +13,7 @@
 #define syslog_facility LOG_LOCAL7
 #define syslog_priority (LOG_LOCAL7|LOG_INFO)
 /* in case the json was rejected, content will be inside this name, presently it is 'message' */
-#define REJECTED_JSON "nojson"
+#define REJECTED_JSON "message"
 
 struct option_doc {
     const char *name;

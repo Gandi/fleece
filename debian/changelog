@@ -1,3 +1,9 @@
+fleece (0.3-14) unstable; urgency=medium
+
+  * Re default to message instead of nojson label
+
+ -- Aurelien Rougemont <beorn@gandi.net>  Fri, 26 Jun 2015 15:42:09 +0200
+
 fleece (0.3-13) unstable; urgency=medium
 
   * set json input size to 2048
